@@ -1,0 +1,65 @@
+{% extends "admin_layout.html" %}
+{% block title %}Admin Dashboard – AutoHire{% endblock %}
+
+{% block extra_head %}
+<style>
+    .black-panel {
+        background: #000000 !important;
+        border: 2px solid #ffffff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        max-width: 700px !important;
+        width: 100%;
+        border-radius: 24px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+    }
+    .black-panel h1,
+    .black-panel p {
+        color: #ffffff !important;
+    }
+    .black-panel .btn:hover {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border-color: #ffffff !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .black-panel a.text-white:hover {
+        color: #ffeb3b !important;
+        transition: color 0.2s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid hero-bg bg-light d-flex align-items-center justify-content-center">
+    <div class="black-panel text-center p-5 rounded shadow">
+        <div style="display:flex; align-items:center; justify-content:center; gap:12px; flex-direction:column;">
+            <h1 class="display-4 fw-bold mb-2" style="margin:0; font-size:2.5rem;">Admin Panel Dashboard</h1>
+            <p class="lead mb-3" style="font-style: italic; max-width:600px; font-family: 'Georgia', serif;">
+                Control your fleet, analyze reports, and manage depot settings effortlessly.
+            </p>
+
+            <div class="d-flex gap-4" style="justify-content:center;">
+                <a href="/admin-fleet" class="btn btn-primary btn-sm rounded-pill px-4 py-2"
+                   style="border-radius: 30px; background-color: #2ecc71; border-color: #27c46a;">
+                    Fleet Manage
+                </a>
+                <a href="/admin-report" class="btn btn-primary btn-sm rounded-pill px-4 py-2"
+                   style="border-radius: 30px; background-color: #f86716; border-color: #e05b0a;">
+                    Report Management
+                </a>
+            </div>
+
+            <!-- Row with two options -->
+            <div class="d-flex justify-content-between w-100 mt-3" style="max-width: 600px;">
+                <a href="/admin/depot" class="text-white" style="text-decoration: underline; font-weight:600; font-size:1rem;">
+                    Change Auto-Hire depot
+                </a>
+                <a href="/admin/manage-admins" class="text-white" style="text-decoration: underline; font-weight:600; font-size:1rem;">
+                    Manage Admins
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

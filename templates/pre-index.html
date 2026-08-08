@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Preconnect to external CDNs to reduce connection latency -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://unpkg.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoHire</title>
+    <!-- YOUR EXISTING CSS LINKS REMAIN HERE UNTOUCHED -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <!-- SCOPED CSS: Only affects the new hero car image. Leaves all other CSS completely intact. -->
+    <style>
+        .hero-car-img {
+            max-width: 70%;
+            height: auto;
+            filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.4));
+            transition: transform 0.3s ease;
+        }
+        .hero-car-img:hover {
+            transform: scale(1.03);
+        }
+        @media (max-width: 991px) {
+            .hero-car-img { max-width: 60%; }
+        }
+    </style>
+<style>
+  /* --- NAVBAR LOGO STYLING --- */
+  .navbar-logo {
+      height: 40px;       /* Professional size */
+      width: auto;        /* Maintains aspect ratio */
+      margin-right: 12px; /* Space between logo and text */
+      vertical-align: middle;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+  }
+
+  .navbar-logo:hover {
+      transform: scale(1.05); /* Subtle hover effect */
+  }
+
+  /* --- FLEET IMAGES: BORDERLESS & CHART-LIKE --- */
+  .fleet-section img, 
+  .fleet-card img, 
+  .fleet-grid img,
+  img[src*="pngimg.com"] {
+      width: 360px;         /* Fixed Width */
+      height: 240px;        /* Fixed Height */
+      object-fit: contain;  /* Ensures no cropping/distortion */
+      border: none;
+      outline: none;
+      box-shadow: none;
+      background: transparent;
+      padding: 0;
+      margin: 0 auto 18px auto;
+      display: block;
+      transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .fleet-card img {
+    width: 100% !important;
+    height: 200px !important;        /* change height as desired */
+    object-fit: cover !important;    /* or 'fill' / 'scale-down' */
+}
+
+  /* Remove container framing for a clean "chart" look */
+  .fleet-card, 
+  .fleet-image-wrapper, 
+  .fleet-grid .col,
+  .fleet-item {
+      border: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      margin-bottom: 16px;
+  }
+
+  /* Subtle hover interaction */
+  .fleet-section img:hover {
+      transform: scale(1.02);
+  }
+
+  /* --- PROFESSIONAL MOVEMENT & ZOOM EFFECTS (ADDED) --- */
+  /* Smooth scrolling & section offset for fixed navbar */
+  html {
+      scroll-behavior: smooth;
+  }
+  section[id] {
+      scroll-margin-top: 80px;
+  }
+
+  /* Feature cards: subtle lift + zoom on hover */
+  .card {
+      transition: transform 0.25s ease, box-shadow 0.3s ease;
+      will-change: transform;
+  }
+  .card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 20px 30px -8px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Fleet image hover (refined) */
+  .fleet-section img:hover,
+  #our-fleet img:hover {
+      transform: scale(1.04);
+  }
+
+  /* Step numbers (01,02,03) subtle zoom on hover */
+  .display-1.fw-bold {
+      transition: transform 0.2s ease;
+      display: inline-block;
+  }
+  .display-1.fw-bold:hover {
+      transform: scale(1.08);
+  }
+
+  /* Button hover effect – smooth */
+  .btn {
+      transition: all 0.2s ease;
+  }
+  .btn:hover {
+      transform: translateY(-2px);
+  }
+
+  /* Navbar: separation + underline hover effect (white text & underline) */
+  .navbar-nav {
+      gap: 0.5rem;  /* separation between nav items */
+  }
+  .navbar-nav .nav-link {
+      position: relative;
+      padding: 0.5rem 1rem !important;
+      font-weight: 500;
+      transition: color 0.25s ease;
+      color: rgba(255,255,255,0.85) !important;
+  }
+  .navbar-nav .nav-link:hover {
+      color: #ffffff !important;
+  }
+  /* Underline animation */
+  .navbar-nav .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 50%;
+      background-color: #ffffff;
+      transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), left 0.3s ease;
+      transform: translateX(-50%);
+  }
+  .navbar-nav .nav-link:hover::after {
+      width: 100%;
+      left: 50%;
+  }
+
+  /* Additional hover for navbar brand/logo area */
+  .navbar-brand {
+      transition: opacity 0.2s;
+  }
+  .navbar-brand:hover {
+      opacity: 0.9;
+  }
+
+  /* Hero CTA buttons smooth effect already covered */
+
+  /* Fleet row images also get a gentle zoom */
+  #our-fleet .img-fluid {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  #our-fleet .img-fluid:hover {
+      transform: scale(1.03);
+      box-shadow: 0 12px 25px -8px rgba(0,0,0,0.2) !important;
+  }
+
+  /* Keep borderless style but allow shadow on hover for fleet images */
+  #our-fleet .img-fluid.rounded {
+      border-radius: 12px !important;
+  }
+
+  /* Responsive touch */
+  @media (max-width: 768px) {
+      .navbar-nav {
+          gap: 0.2rem;
+      }
+  }
+
+  /* ============================================ */
+  /* --- FLEET SECTION WITH WORKING ARROWS --- */
+  /* ============================================ */
+
+  /* Scroll wrapper hides overflow while allowing smooth scrolling */
+  .fleet-scroll-wrapper {
+      overflow-x: hidden;
+      overflow-y: visible;
+      scroll-behavior: smooth;
+      padding: 10px 0;
+      margin: 0 -10px;
+  }
+
+  /* Flex row that holds all fleet cards */
+  .fleet-cards-row {
+      display: flex;
+      gap: 20px;
+      transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+      padding: 0 10px;
+  }
+
+  /* Fleet card sizing - each card takes equal width */
+  .fleet-card {
+      flex: 0 0 calc(25% - 15px); /* 4 cards visible by default */
+      min-width: 240px;
+      text-align: center;
+      padding: 20px 15px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      border-radius: 12px;
+      background: #ffffff;
+      border: none !important;
+      box-shadow: none !important;
+      margin-bottom: 16px;
+  }
+
+  /* Responsive card widths */
+  @media (max-width: 1199px) {
+      .fleet-card {
+          flex: 0 0 calc(33.333% - 14px); /* 3 cards */
+      }
+  }
+
+  @media (max-width: 991px) {
+      .fleet-card {
+          flex: 0 0 calc(50% - 10px); /* 2 cards */
+      }
+  }
+
+  @media (max-width: 576px) {
+      .fleet-card {
+          flex: 0 0 calc(100% - 0px); /* 1 card */
+          min-width: auto;
+      }
+  }
+
+  .fleet-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .fleet-image-wrapper {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 10px;
+      transition: background 0.25s ease;
+      border: none !important;
+      box-shadow: none !important;
+  }
+
+  .fleet-card:hover .fleet-image-wrapper {
+      background: #e9ecef;
+  }
+
+  .fleet-card img {
+      width: 100% !important;
+      height: 180px !important;
+      object-fit: contain !important;
+      transition: transform 0.3s ease;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+      display: block !important;
+  }
+
+  .fleet-card:hover img {
+      transform: scale(1.05);
+  }
+
+  .fleet-card h5 {
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+  }
+
+  .fleet-card p {
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin-bottom: 8px;
+  }
+
+  .fleet-card .btn-link {
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+  }
+
+  .fleet-card .btn-link:hover {
+      color: #0d6efd !important;
+  }
+
+  /* --- ARROW STYLES --- */
+  .fleet-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.25s ease;
+      font-size: 1.25rem;
+      color: #333;
+  }
+
+  .fleet-arrow:hover {
+      background: #0d6efd;
+      color: #ffffff;
+      border-color: #0d6efd;
+      box-shadow: 0 6px 16px rgba(13, 110, 253, 0.25);
+      transform: translateY(-50%) scale(1.05);
+  }
+
+  .fleet-arrow:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+  }
+
+  .fleet-arrow-left {
+      left: -24px;
+  }
+
+  .fleet-arrow-right {
+      right: -24px;
+  }
+
+  /* Adjust arrow positions for mobile */
+  @media (max-width: 991px) {
+      .fleet-arrow-left {
+          left: 0;
+      }
+      .fleet-arrow-right {
+          right: 0;
+      }
+  }
+
+  /* --- DOTS INDICATOR --- */
+  .fleet-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+  }
+
+  .fleet-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #dee2e6;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 0;
+  }
+
+  .fleet-dot.active {
+      background: #0d6efd;
+      width: 24px;
+      border-radius: 5px;
+  }
+
+  /* ============================================ */
+  /* --- PROFESSIONAL FOOTER STYLES --- */
+  /* ============================================ */
+  .footer-section {
+      background: #1a1a1a;
+      color: #cccccc;
+      padding: 50px 0 20px 0;
+  }
+  .footer-section h5 {
+      color: #ffffff;
+      font-weight: 600;
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+  }
+  .footer-section p {
+      color: #999999;
+      font-size: 0.9rem;
+      line-height: 1.6;
+  }
+  .footer-divider {
+      border-color: #333333;
+      margin: 30px 0;
+      opacity: 0.5;
+  }
+  .footer-bottom {
+      color: #777777;
+      font-size: 0.85rem;
+  }
+  .footer-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 15px;
+      color: #999999;
+      font-size: 0.9rem;
+  }
+  .footer-feature-item i {
+      color: #0d6efd;
+      font-size: 1.1rem;
+      margin-top: 2px;
+      flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="navbar-logo"> AutoHire</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/how-it-works">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/our-fleet">Choose us</a></li>
+                </ul>
+                
+                {% if role == "admin" %}
+                <div class="dropdown me-3">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Admin
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/admin-fleet">Manage Fleet</a></li>
+                        <li><a class="dropdown-item" href="/admin-report">Report Management</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <a href="/login" class="btn btn-outline-light">Login</a>
+                    <a href="/register" class="btn btn-primary">Register</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% include 'components/alerts.html' %}
+
+    <!-- CONDITIONAL CONTENT: Show different sections based on the requested page -->
+    
+    {% if requested_page == 'home' or not requested_page %}
+    <!-- HERO SECTION (Only shown on Home page) -->
+    <section class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- LEFT SIDE: Paragraph & CTA -->
+                <div class="col-lg-6 col-md-12 mb-4 mb-lg-0 text-start">
+                    <h1 class="display-5 fw-bold mb-3">Auto-Hire Car Rental</h1>
+                    <p class="lead mb-4">
+                        A centralized platform for hassle-free bookings with automated receipts and encrypted data protection. We specialize in short-term automobile rentals ranging from a few hours to a few weeks, delivering verified users, secure payments, and reliable rides.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="/login" class="btn btn-primary btn-lg">Book Now</a>
+                        <a href="/explore" class="btn btn-outline-light btn-lg">Explore Us</a>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDE: Professional Car Image -->
+                <div class="col-lg-6 col-md-12 text-center">
+                    <img src="{{ url_for('static', filename='images/2.png') }}" alt="AutoHire Fleet" class="img-fluid hero-car-img">
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if requested_page == 'home' or not requested_page or requested_page == 'features' %}
+    <!-- FEATURES SECTION -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">Why Book with AutoHire?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-shield-check fs-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Verified Fleet</h5>
+                        <p class="text-muted">Every vehicle is inspected and fully serviced before every rental, so you drive with confidence.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-currency-dollar fs-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Transparent Pricing</h5>
+                        <p class="text-muted">Clear daily and hourly rates with no hidden fees. Minute-level charges are shown in the booking breakdown for full transparency.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-calendar-check fs-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Flexible Bookings</h5>
+                        <p class="text-muted">Reserve by hour or by day. Modify return times easily from your profile.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-lock-fill fs-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Safe & Secure</h5>
+                        <p class="text-muted">Comprehensive insurance and 24/7 roadside assistance available on selected vehicles for worry-free trips.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-tag-fill fs-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Lowest Competitive Rates</h5>
+                        <p class="text-muted">We search our fleet to offer you competitive daily and hourly rates with promotions and seasonal discounts when available.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm text-center p-4">
+                        <i class="bi bi-credit-card fs-1 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Easy Payment & Policies</h5>
+                        <p class="text-muted">Multiple payment options, simple cancellation rules, and clear booking policies make checkout fast and reliable.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-5">
+                <h4 class="fw-bold">Trusted by Thousands</h4>
+                <p class="text-muted">Join thousands of satisfied customers who rely on AutoHire for safe, affordable and convenient car rentals.</p>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if requested_page == 'home' or not requested_page or requested_page == 'our-fleet' %}
+    <!-- OUR FLEET SECTION -->
+    <section id="our-fleet" class="py-5 bg-light fleet-section">
+        <div class="container text-center mb-5">
+            <h2 class="fw-bold">Our Fleet. Your Keys.</h2>
+            <h4 class="text-muted">CAR RENTALS THAT FIT YOUR BUDGET</h4>
+        </div>
+        <div class="container position-relative">
+            <!-- Left Arrow -->
+            <button class="fleet-arrow fleet-arrow-left" id="fleetPrev" aria-label="Previous fleet items">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            
+            <!-- Right Arrow -->
+            <button class="fleet-arrow fleet-arrow-right" id="fleetNext" aria-label="Next fleet items">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+            
+            <!-- Fleet Cards Container -->
+            <div class="fleet-scroll-wrapper" id="fleetScrollWrapper">
+                <div class="fleet-cards-row" id="fleetCardsRow">
+                    <!-- Fleet Card 1 - City car -->
+                    <div class="fleet-card">
+                        <div class="fleet-image-wrapper">
+                            <img src="{{ url_for('static', filename='images/1.jpg') }}" alt="City car">
+                        </div>
+                        <h5 class="fw-bold mt-2">City car</h5>
+                        <p class="text-muted small">These range from compact and fuel-efficient city to eco-friendly model</p>
+                        <a href="/login" class="btn btn-sm btn-link text-dark p-0">Book Now <i class="bi bi-arrow-right small"></i></a>
+                    </div>
+                    
+                    <!-- Fleet Card 2 - Premium -->
+                    <div class="fleet-card">
+                        <div class="fleet-image-wrapper">
+                            <img src="{{ url_for('static', filename='images/23.jpg') }}" alt="Premium">
+                        </div>
+                        <h5 class="fw-bold mt-2">Premium</h5>
+                        <p class="text-muted small">You can choose from a wide range of premium vehicles made by legendary manufacturers</p>
+                        <a href="/login" class="btn btn-sm btn-link text-dark p-0">Book Now <i class="bi bi-arrow-right small"></i></a>
+                    </div>
+                    
+                    <!-- Fleet Card 3 - Electric -->
+                    <div class="fleet-card">
+                        <div class="fleet-image-wrapper">
+                            <img src="{{ url_for('static', filename='images/24.jpg') }}" alt="Electric">
+                        </div>
+                        <h5 class="fw-bold mt-2">Electric</h5>
+                        <p class="text-muted small">Discover our models of electric, hybrid or plug-in vehicles</p>
+                        <a href="/login" class="btn btn-sm btn-link text-dark p-0">Book Now <i class="bi bi-arrow-right small"></i></a>
+                    </div>
+                    
+                    <!-- Fleet Card 4 - Vans & Trucks -->
+                    <div class="fleet-card">
+                        <div class="fleet-image-wrapper">
+                            <img src="{{ url_for('static', filename='images/25.jpg') }}" alt="Vans & Trucks">
+                        </div>
+                        <h5 class="fw-bold mt-2">Vans & Trucks</h5>
+                        <p class="text-muted small">You're looking for a SUV for your business or leisure trip?</p>
+                        <a href="/login" class="btn btn-sm btn-link text-dark p-0">Book Now <i class="bi bi-arrow-right small"></i></a>
+                    </div>
+                    
+                    <!-- Fleet Card 5 - Pickup -->
+                    <div class="fleet-card">
+                        <div class="fleet-image-wrapper">
+                            <img src="{{ url_for('static', filename='images/26.jpg') }}" alt="Pickup">
+                        </div>
+                        <h5 class="fw-bold mt-2">Pickup</h5>
+                        <p class="text-muted small">Discover our models of pickup, hybrid or plug-in vehicles</p>
+                        <a href="/login" class="btn btn-sm btn-link text-dark p-0">Book Now <i class="bi bi-arrow-right small"></i></a>
+                    </div>
+                    
+                    <!-- Fleet Card 6 - Coupe -->
+                    <div class="fleet-card">
+                        <div class="fleet-image-wrapper">
+                            <img src="{{ url_for('static', filename='images/27.jpg') }}" alt="Coupe">
+                        </div>
+                        <h5 class="fw-bold mt-2">Coupe</h5>
+                        <p class="text-muted small">Discover our models of Coupe, hybrid or plug-in vehicles</p>
+                        <a href="/login" class="btn btn-sm btn-link text-dark p-0">Book Now <i class="bi bi-arrow-right small"></i></a>
+                    </div>
+
+                    <!-- Fleet Card 7 - Offroad -->
+                    <div class="fleet-card">
+                        <div class="fleet-image-wrapper">
+                            <img src="{{ url_for('static', filename='images/28.jpg') }}" alt="Offroad">
+                        </div>
+                        <h5 class="fw-bold mt-2">Offroad</h5>
+                        <p class="text-muted small">Discover our models of Offroad, hybrid or plug-in vehicles</p>
+                        <a href="/login" class="btn btn-sm btn-link text-dark p-0">Book Now <i class="bi bi-arrow-right small"></i></a>
+                    </div>
+                    
+                    <!-- ADD MORE FLEET CARDS HERE -->
+                    
+                </div>
+            </div>
+            
+            <!-- Dots Indicator -->
+            <div class="fleet-dots" id="fleetDots"></div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if requested_page == 'home' or not requested_page or requested_page == 'how-it-works' %}
+    <!-- HOW IT WORKS SECTION (Shown on all pages) -->
+    <section id="how-it-works" class="py-5">
+        <div class="container text-center mb-5">
+            <h2 class="fw-bold">Booking In Just 3 Steps</h2>
+            <p class="lead text-muted">Fast, simple and secure — get on the road in minutes with AutoHire.</p>
+        </div>
+        <div class="container">
+            <div class="row text-center g-4">
+                <div class="col-md-4">
+                    <div class="display-1 fw-bold text-primary">01</div>
+                    <h4 class="fw-bold mt-3">Search</h4>
+                    <p class="text-muted">Enter pickup and return details to find available cars near you.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="display-1 fw-bold text-primary">02</div>
+                    <h4 class="fw-bold mt-3">Select</h4>
+                    <p class="text-muted">Choose the car that fits your needs — view details, pricing and minute-level breakdowns before reserving.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="display-1 fw-bold text-primary">03</div>
+                    <h4 class="fw-bold mt-3">Pay</h4>
+                    <p class="text-muted">Secure checkout with card or local payment methods and instant confirmation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- PROFESSIONAL FOOTER (Shown on all pages) -->
+    <footer class="footer-section">
+        <div class="container">
+            <div class="row">
+                <!-- Column 1: About -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5>About AutoHire</h5>
+                    <p>Your trusted partner for hassle-free car rentals. We offer a wide range of vehicles at competitive prices with transparent billing and 24/7 support.</p>
+                </div>
+                
+                <!-- Column 2: Why Choose Us -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5>Why Choose Us</h5>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Verified & fully serviced fleet</span>
+                    </div>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Transparent pricing with no hidden fees</span>
+                    </div>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Flexible hourly and daily bookings</span>
+                    </div>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>24/7 roadside assistance</span>
+                    </div>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Secure payment options</span>
+                    </div>
+                </div>
+                
+                <!-- Column 3: Contact Info -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5>Contact Information</h5>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span>AutoHire Depot, Main Boulevard, Lahore, Pakistan</span>
+                    </div>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-envelope-fill"></i>
+                        <span>support@autohire.com</span>
+                    </div>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-telephone-fill"></i>
+                        <span>+92 300 1234567</span>
+                    </div>
+                    <div class="footer-feature-item">
+                        <i class="bi bi-clock-fill"></i>
+                        <span>Mon - Sun: 8:00 AM - 10:00 PM</span>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="footer-divider">
+            
+            <!-- Bottom Bar -->
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="footer-bottom mb-0">&copy; {{ current_year }} AutoHire. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="footer-bottom mb-0">Professional Car Rental Services</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- EXISTING JS REMAINS HERE UNTOUCHED -->
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- FLEET ARROW NAVIGATION SCRIPT -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const wrapper = document.getElementById('fleetScrollWrapper');
+        const row = document.getElementById('fleetCardsRow');
+        const prevBtn = document.getElementById('fleetPrev');
+        const nextBtn = document.getElementById('fleetNext');
+        const dotsContainer = document.getElementById('fleetDots');
+        
+        if (!wrapper || !row || !prevBtn || !nextBtn) return;
+        
+        let currentIndex = 0;
+        let cardsPerView = 4;
+        
+        // Calculate cards per view based on screen size
+        function getCardsPerView() {
+            const width = window.innerWidth;
+            if (width <= 576) return 1;
+            if (width <= 991) return 2;
+            if (width <= 1199) return 3;
+            return 4;
+        }
+        
+        // Calculate card width including gap
+        function getCardWidth() {
+            const card = row.querySelector('.fleet-card');
+            if (!card) return 300;
+            const cardWidth = card.offsetWidth;
+            const rowGap = parseInt(window.getComputedStyle(row).gap || 20);
+            return cardWidth + rowGap;
+        }
+        
+        const totalCards = row.children.length;
+        
+        // Create dots
+        function createDots() {
+            cardsPerView = getCardsPerView();
+            const totalDots = Math.max(1, totalCards - cardsPerView + 1);
+            dotsContainer.innerHTML = '';
+            
+            for (let i = 0; i < totalDots; i++) {
+                const dot = document.createElement('button');
+                dot.className = 'fleet-dot';
+                dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+                dot.addEventListener('click', function() {
+                    goToSlide(i);
+                });
+                dotsContainer.appendChild(dot);
+            }
+            updateDots();
+        }
+        
+        function updateDots() {
+            const dots = dotsContainer.querySelectorAll('.fleet-dot');
+            dots.forEach(function(dot, i) {
+                if (i === currentIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+        
+        function updateArrows() {
+            const totalSlides = Math.max(1, totalCards - getCardsPerView() + 1);
+            prevBtn.disabled = currentIndex <= 0;
+            nextBtn.disabled = currentIndex >= totalSlides - 1;
+        }
+        
+        function goToSlide(index) {
+            cardsPerView = getCardsPerView();
+            const totalSlides = Math.max(1, totalCards - cardsPerView + 1);
+            currentIndex = Math.max(0, Math.min(index, totalSlides - 1));
+            
+            const cardWidth = getCardWidth();
+            const scrollAmount = currentIndex * cardWidth;
+            
+            row.style.transform = 'translateX(-' + scrollAmount + 'px)';
+            
+            updateDots();
+            updateArrows();
+        }
+        
+        prevBtn.addEventListener('click', function() {
+            goToSlide(currentIndex - 1);
+        });
+        
+        nextBtn.addEventListener('click', function() {
+            goToSlide(currentIndex + 1);
+        });
+        
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                createDots();
+                goToSlide(0); // Reset to first slide on resize
+            }, 250);
+        });
+        
+        // Initialize
+        createDots();
+        updateArrows();
+    });
+    </script>
+    {% include 'components/chat_widget.html' %}
+</body>
+</html>

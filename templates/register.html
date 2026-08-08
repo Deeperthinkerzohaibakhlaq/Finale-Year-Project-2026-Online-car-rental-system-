@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - AutoHire Rentals</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        .register-card-custom {
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -8px rgba(0,0,0,0.1), 0 5px 10px -4px rgba(0,0,0,0.02);
+            background: white;
+            border: 1.5px solid #1e1e1e;
+            transition: transform 0.2s ease;
+            overflow: hidden;
+        }
+        .register-card-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 40px -12px rgba(0,0,0,0.15);
+        }
+        .register-image-container img {
+            border-top-left-radius: 24px;
+            border-bottom-left-radius: 24px;
+        }
+        .form-control-pill {
+            border-radius: 40px !important;
+            border: 1.5px solid #dee2e6;
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            background-color: white;
+        }
+        .form-control-pill:focus {
+            border-color: #1e1e1e;
+            box-shadow: 0 0 0 3px rgba(30,30,30,0.1);
+            outline: none;
+        }
+        .form-control-pill::placeholder {
+            color: #9aa0a6;
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .btn-register-custom {
+            background-color: #0f0f0f;
+            color: white;
+            border-radius: 40px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border: none;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+        .btn-register-custom:hover {
+            background-color: #2b2b2b;
+            color: white;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+        }
+        .register-split-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .bg-white {
+            border-top-right-radius: 24px;
+            border-bottom-right-radius: 24px;
+        }
+        .form-text {
+            font-size: 0.75rem;
+            margin-top: 0.2rem;
+        }
+        .heading-underline {
+            width: 60px;
+            height: 3px;
+            background: #0f0f0f;
+            margin: 0.5rem 0 1rem 0;
+        }
+        .terms-text {
+            font-size: 0.8rem;
+        }
+        .signin-link {
+            color: #0f0f0f;
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 1px dotted transparent;
+            transition: border-color 0.15s;
+        }
+        .signin-link:hover {
+            border-bottom-color: #0f0f0f;
+        }
+        .g-2 {
+            --bs-gutter-y: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    {% include 'components/alerts.html' %}
+
+    <div class="register-split-wrapper">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-10">
+                    <div class="card register-card-custom border-0">
+                        <div class="row g-0">
+                            <!-- Left Side: Image -->
+                            <div class="col-md-5 d-none d-md-block p-0">
+                                <div class="h-100 w-100 register-image-container">
+                                    <img src="{{ url_for('static', filename='images/orange.jpg') }}" alt="Luxury Car" class="w-100 h-100 object-fit-cover">
+                                </div>
+                            </div>
+
+                            <!-- Right Side: Form -->
+                            <div class="col-md-7 d-flex flex-column justify-content-center p-4 p-md-5 bg-white">
+                                <h2 class="fw-bold mb-1">Create an Account</h2>
+                                <div class="heading-underline"></div>
+                                <p class="text-muted mb-4">Join now to streamline your experience from day one.</p>
+
+                                <form id="registerForm" class="register-form">
+                                    <input type="hidden" name="role" id="role" value="user">
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-6">
+                                            <label for="nameInp" class="form-label">Full Name</label>
+                                            <input type="text" class="form-control form-control-pill" id="nameInp" name="name" placeholder="Enter Name" required>
+                                            <div class="form-text text-danger small" id="nameInpError"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="emailInp" class="form-label">Email</label>
+                                            <input type="email" class="form-control form-control-pill" id="emailInp" name="email" placeholder="you@example.com" required autocomplete="email">
+                                            <div class="form-text text-danger small" id="emailInpError"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- NEW: Balance Deposit Row -->
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-6">
+                                            <label for="balanceDeposit" class="form-label">Initial Deposit (PKR)</label>
+                                            <input type="number" class="form-control form-control-pill" id="balanceDeposit" name="balance_deposit" placeholder="e.g., 5000" required min="0" step="0.01">
+                                            <div class="form-text small">This amount will be added to your account balance and used for future rentals.</div>
+                                        </div>
+                                        <div class="col-md-6"></div>
+                                    </div>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-6">
+                                            <label for="newPasswordInp" class="form-label">Password</label>
+                                            <input type="password" class="form-control form-control-pill" id="newPasswordInp" name="newPassword" placeholder="••••••••" required autocomplete="new-password">
+                                            <div class="form-text text-danger small" id="invalidPassword"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="confirmPasswordInp" class="form-label">Confirm Password</label>
+                                            <input type="password" class="form-control form-control-pill" id="confirmPasswordInp" name="confirmPassword" placeholder="••••••••" required autocomplete="new-password">
+                                            <div class="form-text text-danger small" id="invalidConfirmPassword"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-4">
+                                            <label for="birthDateInp" class="form-label">Date of Birth</label>
+                                            <input type="date" class="form-control form-control-pill" id="birthDateInp" name="birth_date" required>
+                                            <div class="form-text small text-danger" id="birthDateError"></div>
+                                            <div class="form-text small">You must be at least 21 to rent a car.</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="licenseNumberInp" class="form-label">License Number</label>
+                                            <input type="text" class="form-control form-control-pill" id="licenseNumberInp" name="license_number" placeholder="DL-123456" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="licenseExpiryInp" class="form-label">License Expiry</label>
+                                            <input type="date" class="form-control form-control-pill" id="licenseExpiryInp" name="license_expiry" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-4">
+                                        <div class="col-md-12">
+                                            <label for="profileImageInp" class="form-label">Profile Image URL</label>
+                                            <input type="url" class="form-control form-control-pill" id="profileImageInp" name="profile_image_url" placeholder="https://...">
+                                            <div class="form-text small">Direct link to your image (optional)</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid gap-2 mb-4">
+                                        <button type="submit" class="btn btn-register-custom">Register →</button>
+                                    </div>
+
+                                    <div class="text-center mt-2">
+                                        <p class="small text-muted">Already have an account? 
+                                            <a href="{{ url_for('login') }}" class="signin-link">Sign In</a>
+                                        </p>
+                                    </div>
+                                </form>
+
+                                <div class="mt-4 pt-3 border-top">
+                                    <p class="terms-text text-muted text-center mb-0">
+                                        By signing up, you agree to AutoHire's <a href="#" class="text-dark">Terms</a> & <a href="#" class="text-dark">Privacy Policy</a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+    (function() {
+        const emailField = document.querySelector('input[name="email"]');
+        const emailError = document.getElementById('emailInpError');
+        const roleInput = document.getElementById('role');
+        if (roleInput) roleInput.value = 'user';
+
+        function checkEmailDomain() {
+            if (!emailField) return;
+            const email = emailField.value.trim();
+            if (email && email.toLowerCase().endsWith('@auto-hire.com')) {
+                emailError.innerText = 'Registration with @auto-hire.com emails is not allowed.';
+                emailField.value = '';
+                emailField.setCustomValidity('Invalid email domain');
+                emailField.reportValidity();
+            } else {
+                emailError.innerText = '';
+                emailField.setCustomValidity('');
+            }
+        }
+        emailField.addEventListener('input', checkEmailDomain);
+        emailField.addEventListener('blur', checkEmailDomain);
+
+        const birthDateInput = document.getElementById('birthDateInp');
+        const birthDateError = document.getElementById('birthDateError');
+        function calculateAge(birthDate) {
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+        function validateBirthDate() {
+            if (!birthDateInput) return;
+            const val = birthDateInput.value;
+            if (!val) {
+                birthDateError.innerText = '';
+                birthDateInput.setCustomValidity('');
+                return;
+            }
+            const birthDate = new Date(val);
+            if (isNaN(birthDate.getTime())) {
+                birthDateError.innerText = 'Invalid date';
+                birthDateInput.value = '';
+                birthDateInput.setCustomValidity('Invalid date');
+                return;
+            }
+            const age = calculateAge(birthDate);
+            if (age < 21) {
+                birthDateError.innerText = 'You must be at least 21 years old to register.';
+                birthDateInput.value = '';
+                birthDateInput.setCustomValidity('Age must be 21+');
+            } else {
+                birthDateError.innerText = '';
+                birthDateInput.setCustomValidity('');
+            }
+        }
+        if (birthDateInput) {
+            birthDateInput.addEventListener('input', validateBirthDate);
+            birthDateInput.addEventListener('blur', validateBirthDate);
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - AutoHire</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link rel="stylesheet" href="static/fonts/bootstrap-icons.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+</head>
+
+<body class="vh-100 d-flex justify-content-center align-items-center bg-light">
+    {% include 'components/alerts.html' %}   <!-- Added to show flash messages -->
+    <div class="container">
+        <div class="row d-flex justify-content-center">
+            <div class="col-md-6 card p-5 border border-rounded border-tertiary shadow-sm">
+                <h2 class="mb-2">Verify Your Email</h2>
+                <p class="text-muted mb-4">
+                    We sent a 6-digit code to <span class="text-primary fw-bold">{{ email }}</span>
+                </p>
+
+                <!-- Success Message -->
+                <div id="successMessage" class="alert alert-success d-none" role="alert">
+                    <i class="bi bi-check-circle"></i> Account verified successfully! Redirecting to login...
+                </div>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="alert alert-danger d-none" role="alert">
+                    <i class="bi bi-exclamation-circle"></i> <span id="errorText"></span>
+                </div>
+
+                <form id="verifyForm" class="needs-validation">
+                    <div class="mb-4">
+                        <label for="otpInput" class="form-label">Verification Code</label>
+                        <input 
+                            type="text" 
+                            class="form-control form-control-lg text-center" 
+                            id="otpInput" 
+                            name="otp" 
+                            placeholder="000000" 
+                            maxlength="6"
+                            pattern="[0-9]{6}"
+                            required
+                            autocomplete="off"
+                            inputmode="numeric"
+                        >
+                        <div class="form-text">Enter the 6-digit code sent to your email</div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary w-100 mb-3" onclick="verifyOTP()">
+                        Verify & Continue
+                    </button>
+                </form>
+
+                <!-- Resend Timer -->
+                <div class="text-center pt-3 border-top">
+                    <p class="text-muted small mb-2">Didn't receive the code?</p>
+                    <button 
+                        id="resendBtn" 
+                        type="button" 
+                        class="btn btn-link text-decoration-none d-none"
+                        onclick="resendOTP()"
+                    >
+                        <i class="bi bi-arrow-clockwise"></i> Resend Code
+                    </button>
+                    <span id="timerText" class="text-muted small">
+                        You can resend in <span id="seconds">30</span>s
+                    </span>
+                </div>
+
+                <!-- Back to Register -->
+                <div class="mt-4 text-center">
+                    <p class="text-muted small">
+                        Changed your email? <a href="{{ url_for('register') }}" class="text-decoration-none">Register Again</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/js/bootstrap.js"></script>
+    <script src="static/js/main.js"></script>
+    <script>
+        // Auto-focus on OTP input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('otpInput').focus();
+        });
+
+        // Auto-submit on 6-digit input
+        document.getElementById('otpInput').addEventListener('input', function() {
+            if (this.value.length === 6) {
+                // Optional: auto-verify when 6 digits are entered
+                // verifyOTP();
+            }
+        });
+
+        // Only allow numbers in OTP input
+        document.getElementById('otpInput').addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+
+</html>

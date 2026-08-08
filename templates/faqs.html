@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQs — AutoHire | Car Rental Questions & Support</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        /* Reusable animations from index/about */
+        .secondary-nav-links .nav-link {
+            position: relative;
+            padding-bottom: 4px;
+            font-weight: 500;
+            transition: all 0.25s ease-in-out;
+        }
+        .secondary-nav-links .nav-link:hover {
+            transform: translateY(-2px);
+            text-shadow: 0 2px 8px rgba(255, 255, 255, 0.4);
+        }
+        .secondary-nav-links .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #f86716;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .secondary-nav-links .nav-link:hover::after {
+            width: 80%;
+        }
+        .btn:hover {
+            transform: scale(1.02) translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+        .btn[style*="background-color: #f86716"]:hover {
+            background-color: #e05a0e !important;
+            border-color: #e05a0e !important;
+            box-shadow: 0 6px 14px rgba(248, 103, 22, 0.3);
+        }
+        .navbar-brand img:hover {
+            transform: scale(1.02);
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+        }
+        .rounded-circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        /* FAQ accordion customizations */
+        .faq-accordion-item {
+            background: white;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .faq-accordion-item:hover {
+            box-shadow: 0 10px 25px -12px rgba(0, 0, 0, 0.1);
+        }
+        .faq-question {
+            font-weight: 600;
+            padding: 1.2rem 1.5rem;
+            cursor: pointer;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #1e2a3a;
+        }
+        .faq-question i {
+            transition: transform 0.25s ease;
+            color: #f86716;
+        }
+        .faq-question[aria-expanded="true"] i {
+            transform: rotate(180deg);
+        }
+        .faq-answer {
+            padding: 0 1.5rem 1.2rem 1.5rem;
+            color: #4a5568;
+            line-height: 1.6;
+            border-top: 1px solid #edf2f7;
+            margin-top: -0.5rem;
+        }
+        .faq-category {
+            background: #f8fafc;
+            border-radius: 32px;
+            padding: 0.5rem 1.2rem;
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1e2a3a;
+            margin-bottom: 1.5rem;
+        }
+        .faq-section-title {
+            position: relative;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .faq-section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: #f86716;
+            border-radius: 3px;
+        }
+        .search-faq {
+            max-width: 500px;
+            margin: 0 auto 2rem auto;
+        }
+        .search-faq input {
+            border-radius: 60px;
+            padding: 0.7rem 1.2rem;
+            border: 1px solid #e2e8f0;
+        }
+        .search-faq input:focus {
+            border-color: #f86716;
+            box-shadow: 0 0 0 3px rgba(248,103,22,0.2);
+        }
+        .bg-faq-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+    </style>
+</head>
+<body>
+
+<!-- ======================== MAIN NAVIGATION ======================== -->
+<nav class="navbar navbar-expand-lg border-body bg-primary p-2">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <img src="{{ url_for('static', filename='images/header.png') }}" alt="AutoHire" height="35"
+                class="d-inline-block align-text-top">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 secondary-nav-links">
+                <li class="nav-item"><a class="nav-link text-white" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/explore">Explore</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link text-white active fw-semibold" href="/faqs">FAQs</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/contact">Contact Us</a></li>
+            </ul>
+            {% if user %}
+            <div class="d-flex align-items-center ms-auto">
+                <div class="d-flex align-items-center text-light me-3">
+                    <img src="{{ user.get_profile_image_url() }}" alt="{{ user.get_name() }}"
+                        class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                    <div class="ms-2 d-none d-lg-block">
+                        <div class="fw-semibold text-start">{{ user.get_name() }}</div>
+                        <div class="text-light text-start small">{{ user.get_email() }}</div>
+                    </div>
+                </div>
+                <div class="vr text-white d-none d-lg-block"></div>
+                <a href="/profile" class="btn btn-outline-light mx-2">Profile</a>
+                <a href="/logout" class="btn btn-primary" style="background-color: #f86716; border-color: #f86716;">Logout <i class="bi bi-box-arrow-right ms-1"></i></a>
+            </div>
+            {% else %}
+            <div class="d-flex ms-auto gap-2">
+                <a href="/login" class="btn btn-outline-light">Login</a>
+                <a href="/register" class="btn btn-primary">Register</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- ======================== FAQ HERO ======================== -->
+<section class="bg-faq-hero py-5 text-white">
+    <div class="container text-center py-4">
+        <h1 class="display-5 fw-bold">Frequently Asked Questions</h1>
+        <p class="lead opacity-90">Everything you need to know about renting a car with AutoHire — from booking to drop-off.</p>
+        <div class="search-faq mt-4">
+            <div class="position-relative">
+                <i class="bi bi-search position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" id="faqSearchInput" class="form-control ps-5" placeholder="Search for answers... e.g., deposit, cancellation, insurance">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================== FAQ CONTENT (ACCORDION) ======================== -->
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Reservations Category -->
+            <div class="faq-category mb-2"><i class="bi bi-calendar-check me-2"></i> Reservations & Payments</div>
+            <div class="faq-section" data-category="reservations">
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q1">
+                        How much does it cost to rent a car from AutoHire?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q1">
+                        AutoHire daily rates start from 5 EUR per day for economy cars in Cyprus, with rates varying by location, vehicle category, and season. All rates include unlimited mileage, basic CDW insurance, and free shuttle service from major airports (Larnaca & Paphos). There are no hidden booking fees. The price you see at checkout is the price you pay. Premium vehicles, SUVs, and automatic cars are available at higher rate tiers.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q2">
+                        How can I book a car with AutoHire?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q2">
+                        The best way is to book directly on our website (www.autohire.com). You may also find AutoHire on comparison sites, but direct booking ensures you get our full customer support and transparent terms. Our reservation team is also available via phone or email to assist you.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q3">
+                        What documents do I need to rent a car?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q3">
+                        You need: (1) A valid driving license held for at least one year (2) A passport or national ID card (3) A credit card in the main driver's name for the security deposit. International visitors from outside the EU need an International Driving Permit (IDP) in addition to their national license. All documents must be originals.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q4">
+                        Can I pay in cash?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q4">
+                        No, cash payments are not accepted. We accept Visa and Mastercard credit cards for both payment and security deposit. Apple Pay is available for online bookings.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q5">
+                        Is prepayment mandatory when booking on AutoHire's website?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q5">
+                        No, prepayment is optional. At checkout you can choose "pay in advance" (discount applies) or "pay on arrival". We do not prioritize prepaid reservations, so all bookings are secure.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q6">
+                        What are the age requirements to rent from AutoHire?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q6">
+                        Drivers must be at least 23 years old and hold a license for 12+ months. Young drivers (21–22) are accepted with a daily fee of €10. Inexperienced driver or very young (18–20) may require a one-time fee. Senior drivers (70+) also have a small daily surcharge. Contact our support for exact details.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q7">
+                        I need to extend my rental. What should I do?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q7">
+                        Log into "Manage Booking" on our website, enter your email and reservation number, then modify the drop-off date. The extra cost is shown and must be paid online. Extensions are confirmed only after payment.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q8">
+                        Can I get the exact same car model as shown on the website?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q8">
+                        We guarantee the car category (similar size/specifications). If the exact model is unavailable, we offer a free upgrade to a higher class. You can express preferences and we'll do our best to accommodate.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q9">
+                        What is your fuel policy?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q9">
+                        You receive the car with a full tank (or level indicated). Please return it with the same amount of fuel. If not, you'll be charged a refueling fee (€20 + fuel cost). Rental price does not include fuel.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Service & Operations -->
+            <div class="faq-category mt-5 mb-2"><i class="bi bi-headset me-2"></i> Customer Service & Shuttle</div>
+            <div class="faq-section" data-category="support">
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q10">
+                        How does the airport shuttle work?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q10">
+                        AutoHire provides a free shuttle service at Larnaca and Paphos airports. After collecting luggage, call the number in your booking confirmation. We’ll pick you up within 10 minutes and drive you directly to our rental office (approx 10–12 min). Shuttle runs 24/7.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q11">
+                        How can I contact the Booking or Customer Care department?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q11">
+                        Booking Department: +357 123 4567 (Mon-Fri 8:30–22:00, Sat–Sun 9:00–18:00) or email bookings@autohire.com. Customer Care: customercare@autohire.com for complaints, lost items, or post-rental issues.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q12">
+                        My flight is delayed. What should I do?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q12">
+                        Simply inform our Customer Care about your new arrival time. We’ll hold your car and adjust pick-up accordingly – no extra charge within reasonable delay. Call the airport shuttle number.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q13">
+                        I returned the car earlier / with more fuel. Can I get a refund?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q13">
+                        For early returns (at least 24h before scheduled drop-off), we issue a discount voucher equivalent to unused days (max 3 days). For extra fuel, you receive a voucher as well. Vouchers have no expiry and are valid at any AutoHire location.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q14">
+                        What happens if I return the car late?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q14">
+                        A grace period of 1 hour is provided. After that, you’ll be charged an additional rental day. If you anticipate delay, please contact the office to extend your rental.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Locations & Vehicles -->
+            <div class="faq-category mt-5 mb-2"><i class="bi bi-geo-alt-fill me-2"></i> Locations & Fleet</div>
+            <div class="faq-section" data-category="locations">
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q15">
+                        Where does AutoHire operate?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q15">
+                        AutoHire operates across Cyprus with major locations in Larnaca, Limassol, Nicosia, and Paphos. All airport locations offer free shuttle. We’re also expanding to select cities in Europe soon.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q16">
+                        Can I pick up in one city and drop off in another?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q16">
+                        Yes, one-way rentals are available between our Cyprus offices. Extra fees apply depending on distance. Contact our reservation team for a quote.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q17">
+                        What are your operating hours?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q17">
+                        Airport locations: 24 hours / 7 days, including holidays (shuttle 24/7). City offices: 8:00 – 20:00 daily. Customer support available 24/7 for emergencies.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q18">
+                        Do you have automatic cars?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q18">
+                        Yes, we offer a wide range of automatic vehicles across all categories. Booking in advance is recommended, especially during high season.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q19">
+                        Is unlimited mileage included?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q19">
+                        All short-term rentals include unlimited mileage at no extra cost. Long-term subscriptions may have mileage packages – see our car subscription page for details.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q20">
+                        What should I do in case of an accident or breakdown?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q20">
+                        Immediately call our 24/7 emergency line (written on your keychain). For accidents: ensure safety, call police if needed, take photos, exchange details. For breakdown: we’ll arrange roadside assistance and a replacement vehicle if necessary.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deposits, Insurance & Damages -->
+            <div class="faq-category mt-5 mb-2"><i class="bi bi-shield-lock-fill me-2"></i> Deposits & Insurance</div>
+            <div class="faq-section" data-category="deposits">
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q21">
+                        The deposit was released but I haven't received the money back. What now?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q21">
+                        We release the pre-authorization immediately upon return. Your bank may take 2–3 weeks to make the funds available again. If you received a cancellation receipt, the hold is lifted; please check with your bank.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q22">
+                        I lost the car keys. What do I do?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q22">
+                        Contact our Customer Care immediately. We’ll arrange a key replacement (fee applies). Do not attempt to start the car with damaged keys.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q23">
+                        Do I need to wash the car before returning?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q23">
+                        If you opted for the deposit option (full responsibility), yes – we require the car clean to inspect for damages. Otherwise, a cleaning fee may apply. Returning it clean helps ensure faster deposit release.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q24">
+                        My deposit is blocked due to damages. How long will it take?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q24">
+                        Our damage department will contact you within 20 days. We work with your insurance provider if applicable. Cases are handled chronologically. Please be patient and provide any third-party insurance documents.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q25">
+                        Can I smoke in the car?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q25">
+                        No, smoking in our vehicles is strictly prohibited. A €124 penalty fee applies if smoke odor or burns are detected.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoices, Refunds, Lost Objects -->
+            <div class="faq-category mt-5 mb-2"><i class="bi bi-file-text-fill me-2"></i> Invoices & Lost Items</div>
+            <div class="faq-section" data-category="admin">
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q26">
+                        How can I get an invoice for my rental?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q26">
+                        At pick-up you can specify invoice details (personal or company). We'll email the invoice within one business day. Contact Customer Care if not received.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q27">
+                        I need to cancel my prepaid booking. When will I get a refund?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q27">
+                        Cancel more than 48h before pick-up: refund minus €30 admin fee within 5-7 business days. Cancel less than 48h: amount is non-refundable but you receive a voucher for additional services. Use the "Cancel" button in your confirmation email.
+                    </div>
+                </div>
+                <div class="faq-accordion-item">
+                    <div class="faq-question" data-question="q28">
+                        I left personal belongings in the car. What should I do?
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer" id="q28">
+                        Email Customer Care with a description, rental contract number, and dates. If found, you can collect from the office, send a friend, or arrange courier shipment (fees may apply).
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================== CTA SECTION ======================== -->
+<section class="py-5 bg-light">
+    <div class="container text-center">
+        <h3 class="fw-bold">Still have questions?</h3>
+        <p class="mb-4">Our support team is ready to help — reach out via live chat, email, or phone.</p>
+        <a href="/contact" class="btn btn-lg px-4" style="background-color:#f86716; color:white;">Contact Support <i class="bi bi-envelope-paper ms-2"></i></a>
+        <a href="/index" class="btn btn-outline-dark btn-lg ms-3">Start a Booking</a>
+    </div>
+</section>
+
+<!-- ======================== FOOTER ======================== -->
+<footer class="bg-dark text-light text-center py-4 mt-3">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div><small>&copy; {{ current_year if current_year else 2026 }} AutoHire — Drive smart, explore more.</small></div>
+            <div class="mt-2 mt-sm-0">
+                <a href="/about" class="text-light text-decoration-none me-3 small">About</a>
+                <a href="/contact" class="text-light text-decoration-none me-3 small">Contact</a>
+                <a href="/faqs" class="text-light text-decoration-none small">FAQs</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="/static/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/main.js"></script>
+<script>
+    // FAQ accordion toggle
+    document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', () => {
+            const answer = question.nextElementSibling;
+            const isExpanded = question.getAttribute('aria-expanded') === 'true';
+            // Close all others? optional - but for simplicity we toggle individually
+            if (isExpanded) {
+                answer.style.display = 'none';
+                question.setAttribute('aria-expanded', 'false');
+            } else {
+                answer.style.display = 'block';
+                question.setAttribute('aria-expanded', 'true');
+            }
+        });
+        // Initially hide all answers
+        question.nextElementSibling.style.display = 'none';
+        question.setAttribute('aria-expanded', 'false');
+    });
+
+    // Search/filter FAQ items
+    const searchInput = document.getElementById('faqSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.trim().toLowerCase();
+            const allQuestions = document.querySelectorAll('.faq-question');
+            
+            allQuestions.forEach(question => {
+                const questionText = question.innerText.toLowerCase();
+                const answerText = question.nextElementSibling.innerText.toLowerCase();
+                const parentItem = question.closest('.faq-accordion-item');
+                if (questionText.includes(searchTerm) || answerText.includes(searchTerm)) {
+                    parentItem.style.display = '';
+                } else {
+                    parentItem.style.display = 'none';
+                }
+            });
+        });
+    }
+</script>
+{% include 'components/chat_widget.html' %}
+</body>
+</html>

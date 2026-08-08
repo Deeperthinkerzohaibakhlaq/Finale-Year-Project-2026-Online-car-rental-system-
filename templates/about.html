@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us — AutoHire | Reliable Car Rentals</title>
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        /* Navigation link animations + brand consistency (matching index/explore) */
+        .secondary-nav-links .nav-link {
+            position: relative;
+            padding-bottom: 4px;
+            font-weight: 500;
+            transition: all 0.25s ease-in-out;
+        }
+        .secondary-nav-links .nav-link:hover {
+            transform: translateY(-2px);
+            text-shadow: 0 2px 8px rgba(255, 255, 255, 0.4);
+        }
+        .secondary-nav-links .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #f86716;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .secondary-nav-links .nav-link:hover::after {
+            width: 80%;
+        }
+        .btn:hover {
+            transform: scale(1.02) translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+        .btn[style*="background-color: #f86716"]:hover {
+            background-color: #e05a0e !important;
+            border-color: #e05a0e !important;
+            box-shadow: 0 6px 14px rgba(248, 103, 22, 0.3);
+        }
+        .navbar-brand img:hover {
+            transform: scale(1.02);
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+        }
+        .rounded-circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        /* About page specific cards, legacy, badges */
+        .about-icon-card {
+            transition: all 0.3s ease;
+            border-radius: 28px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .about-icon-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 28px -12px rgba(0, 0, 0, 0.12);
+            background-color: #ffffff;
+            border-color: rgba(248, 103, 22, 0.2);
+        }
+        .stat-badge {
+            background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+            border-left: 4px solid #f86716;
+            transition: 0.2s;
+        }
+        .stat-badge:hover {
+            transform: scale(1.01);
+            border-left-width: 6px;
+        }
+        .history-timeline-marker {
+            background: #f86716;
+            width: 58px;
+            height: 58px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 60px;
+            box-shadow: 0 12px 18px -8px rgba(248,103,22,0.3);
+        }
+        .support-list li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .support-list i {
+            font-size: 1.6rem;
+            color: #f86716;
+            background: rgba(248,103,22,0.1);
+            padding: 8px;
+            border-radius: 50%;
+        }
+        .section-divider {
+            width: 70px;
+            height: 3px;
+            background: #f86716;
+            margin: 0.5rem auto 1.5rem auto;
+            border-radius: 4px;
+        }
+        .bg-soft-orange {
+            background: rgba(248, 103, 22, 0.04);
+        }
+        .rating-stars i {
+            color: #ffb800;
+            margin-right: 3px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ======================== MAIN NAVIGATION ======================== -->
+<nav class="navbar navbar-expand-lg border-body bg-primary p-2">
+    <div class="container-fluid">
+        <!-- Brand -->
+        <a class="navbar-brand" href="/">
+            <img src="{{ url_for('static', filename='images/header.png') }}" alt="AutoHire" height="35"
+                class="d-inline-block align-text-top">
+        </a>
+
+        <!-- Toggler for mobile -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Collapsible content -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <!-- Navigation Links (consistent with explore/faqs) -->
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 secondary-nav-links">
+                <li class="nav-item"><a class="nav-link text-white" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/explore">Explore</a></li>
+                <li class="nav-item"><a class="nav-link text-white active fw-semibold" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/faqs">FAQs</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/contact">Contact Us</a></li>
+            </ul>
+
+            <!-- Right side: Profile & Logout (if logged in) OR guest buttons -->
+            {% if user %}
+            <div class="d-flex align-items-center ms-auto">
+                <div class="d-flex align-items-center text-light me-3">
+                    <img src="{{ user.get_profile_image_url() }}" alt="{{ user.get_name() }}"
+                        class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                    <div class="ms-2 d-none d-lg-block">
+                        <div class="fw-semibold text-start">{{ user.get_name() }}</div>
+                        <div class="text-light text-start small">{{ user.get_email() }}</div>
+                    </div>
+                </div>
+                <div class="vr text-white d-none d-lg-block"></div>
+                <a href="/profile" class="btn btn-outline-light mx-2">Profile</a>
+                <a href="/logout" class="btn btn-primary" style="background-color: #f86716; border-color: #f86716;">Logout
+                    <i class="bi bi-box-arrow-right ms-1"></i>
+                </a>
+            </div>
+            {% else %}
+            <div class="d-flex ms-auto gap-2">
+                <a href="/login" class="btn btn-outline-light">Login</a>
+                <a href="/register" class="btn btn-primary" style="background-color: #0d6efd;">Register</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- ======================== ABOUT HERO ======================== -->
+<section class="container-fluid bg-light py-5 border-bottom">
+    <div class="container text-center py-3">
+        <h1 class="display-4 fw-bold text-primary">About AutoHire</h1>
+        <p class="lead text-muted mx-auto" style="max-width: 760px;">Seamless, transparent & customer-first car rentals — from economy daily trips to long-term mobility solutions.</p>
+        <div class="section-divider mx-auto"></div>
+        <div class="rating-stars mt-2">
+            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+            <span class="ms-2 text-dark fw-semibold">4.9/5 · 2,300+ happy renters</span>
+        </div>
+    </div>
+</section>
+
+<!-- ======================== WHY CHOOSE US (card grid) ======================== -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Why choose <span class="text-primary">AutoHire</span>?</h2>
+            <p class="text-muted">Affordable, flexible & backed by industry-leading service</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="p-4 shadow-sm rounded-4 bg-white h-100 about-icon-card text-center">
+                    <i class="bi bi-buildings fs-1 text-primary"></i>
+                    <h5 class="fw-bold mt-3">Locally owned & operated</h5>
+                    <p class="text-muted small">Proudly serving Cyprus with a personal touch & deep local knowledge.</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="p-4 shadow-sm rounded-4 bg-white h-100 about-icon-card text-center">
+                    <i class="bi bi-calendar-check fs-1 text-primary"></i>
+                    <h5 class="fw-bold mt-3">Flexible renting options</h5>
+                    <p class="text-muted small">Hourly, daily, weekly, or monthly — you decide. Extend easily from your profile.</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="p-4 shadow-sm rounded-4 bg-white h-100 about-icon-card text-center">
+                    <i class="bi bi-headset fs-1 text-primary"></i>
+                    <h5 class="fw-bold mt-3">Fast customer support</h5>
+                    <p class="text-muted small">24/7 assistance, real-time chat & email response within 2 hours.</p>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="p-4 shadow-sm rounded-4 bg-white h-100 about-icon-card text-center">
+                    <i class="bi bi-trophy-fill fs-1 text-primary"></i>
+                    <h5 class="fw-bold mt-3">Rental Vehicle Association</h5>
+                    <p class="text-muted small">RVA member — certified safety, ethical practices & full compliance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================== BETTER WAY + SAFETY SECTION (two columns) ======================== -->
+<section class="py-5 bg-soft-orange">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="pe-lg-4">
+                    <span class="badge bg-primary bg-opacity-10 text-primary mb-3 px-3 py-2 rounded-pill"><i class="bi bi-lightbulb"></i> Our philosophy</span>
+                    <h2 class="fw-bold display-6">We believe there’s a smarter way to rent a car.</h2>
+                    <p class="lead text-secondary mt-3">Transparent pricing, no hidden fees, and real flexibility — whether you need a vehicle for a weekend escape or a monthly working trip.</p>
+                    <p class="">AutoHire was born to bridge the gap between traditional car hire and long-term leasing. Every vehicle is maintained to the highest standard, and our digital platform gives you total control over bookings, extensions, and payments.</p>
+                    <div class="mt-4 d-flex gap-3 flex-wrap">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> <span>No deposit gimmicks</span></div>
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> <span>Pay as you go</span></div>
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> <span>Modify anytime</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="bg-white p-4 rounded-4 shadow-sm">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <i class="bi bi-shield-lock-fill fs-1" style="color:#f86716;"></i>
+                        <h3 class="h4 mb-0 fw-bold">Your safety is our priority</h3>
+                    </div>
+                    <p>Trust and safety are at the core of everything we do. All AutoHire vehicles are fully insured and comply with strict EU & Cypriot vehicle fitness standards — including ABS, EBD, and ESC systems.</p>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-patch-check-fill text-primary me-2"></i> Comprehensive insurance</li>
+                                <li><i class="bi bi-patch-check-fill text-primary me-2"></i> 24/7 roadside assistance</li>
+                                <li><i class="bi bi-patch-check-fill text-primary me-2"></i> Regular safety inspections</li>
+                            </ul>
+                        </div>
+                        <div class="col-6">
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-patch-check-fill text-primary me-2"></i> ESC & ABS equipped fleet</li>
+                                <li><i class="bi bi-patch-check-fill text-primary me-2"></i> Tyre & brake guarantee</li>
+                                <li><i class="bi bi-patch-check-fill text-primary me-2"></i> Sanitized before every rental</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================== HISTORY & LEGACY ======================== -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center mb-5">
+                <h2 class="fw-bold">Our journey — where mobility meets trust</h2>
+                <div class="section-divider mx-auto"></div>
+                <p class="text-muted">From a small local fleet to a full-scale digital rental platform, AutoHire keeps moving Cyprus forward.</p>
+            </div>
+        </div>
+        <div class="row g-5 align-items-center">
+            <div class="col-md-6">
+                <div class="history-timeline-marker mb-4"><i class="bi bi-clock-history fs-3 text-white"></i></div>
+                <h3 class="fw-bold">Founded by travelers, for travelers.</h3>
+                <p class="mt-3">AutoHire was created by a team of passionate drivers and tech enthusiasts who recognized that traditional car rental lacked flexibility, clarity, and fairness. We set out to build an online platform where booking a car is as easy as ordering a ride — with honest rates, minute-level pricing, and the freedom to cancel or adjust.</p>
+                <p>Since our launch in 2021, we have served thousands of customers across Cyprus — from tourists exploring Paphos to professionals needing reliable monthly wheels. Our legacy continues to grow, powered by a dedicated local support team and a constantly expanding fleet.</p>
+                <div class="mt-4 d-flex flex-wrap gap-4">
+                    <div><span class="fw-bold display-6 text-primary">30+</span> <span class="text-muted">years combined industry experience</span></div>
+                    <div><span class="fw-bold display-6 text-primary">3</span> <span class="text-muted">convenient locations (Larnaca, Limassol, Nicosia)</span></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="bg-light p-4 rounded-4 shadow-sm">
+                    <div class="d-flex justify-content-between border-bottom pb-3 mb-3">
+                        <i class="bi bi-people-fill fs-2"></i>
+                        <span class="badge bg-dark rounded-pill">Since 2021</span>
+                    </div>
+                    <p class="fst-italic">"AutoHire transformed the way we think about long-term rentals. Their pay-per-minute model saved us thousands, and the cars are always immaculate."</p>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" class="rounded-circle" width="40" height="40" alt="customer">
+                        <div><strong>Elena K.</strong> <br><small class="text-muted">Verified Renter, 6+ months</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================== GENUINE SUPPORT + THE AUTOHIRE DIFFERENCE ======================== -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <div class="bg-white p-4 p-xl-5 rounded-4 shadow-sm h-100">
+                    <i class="bi bi-chat-dots-fill fs-1 mb-3" style="color:#f86716;"></i>
+                    <h3 class="fw-bold">Genuine support, every step of the way</h3>
+                    <p>When you book with AutoHire, you’re choosing a local business that believes in quality and genuine human support. From pickup to drop-off, our customer success team is ready to assist.</p>
+                    <ul class="support-list list-unstyled mt-4">
+                        <li><i class="bi bi-telephone-forward"></i> <span><strong>24/7 roadside assistance</strong> — peace of mind anywhere in Cyprus</span></li>
+                        <li><i class="bi bi-airplane-engines"></i> <span><strong>Complimentary airport shuttle</strong> from Larnaca & Paphos airports</span></li>
+                        <li><i class="bi bi-person-plus"></i> <span><strong>First additional driver free</strong> — share the drive at no cost</span></li>
+                        <li><i class="bi bi-speedometer2"></i> <span><strong>48,000 km/year allowance</strong> — generous mileage for long‑term rentals</span></li>
+                        <li><i class="bi bi-star"></i> <span><strong>Rated 4.9★ by 2,300+ customers</strong> on Google & Trustpilot</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="bg-white p-4 rounded-4 shadow-sm h-100">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-gem fs-1" style="color:#f86716;"></i>
+                        <h3 class="h4 fw-bold mb-0">The AutoHire difference</h3>
+                    </div>
+                    <p class="text-secondary">What makes us different? Radical transparency, ultra-flexible plans, and a fleet that's always ready.</p>
+                    <div class="mt-3">
+                        <div class="stat-badge p-3 rounded-3 mb-3">
+                            <i class="bi bi-credit-card-2-front me-2"></i> <strong>No security deposit</strong> — Pay only for what you book.
+                        </div>
+                        <div class="stat-badge p-3 rounded-3 mb-3">
+                            <i class="bi bi-arrow-repeat me-2"></i> <strong>Free cancellation up to 6h before pickup</strong>
+                        </div>
+                        <div class="stat-badge p-3 rounded-3 mb-3">
+                            <i class="bi bi-calculator-fill me-2"></i> <strong>Hourly + daily + monthly rates</strong> — exact minute billing.
+                        </div>
+                        <div class="stat-badge p-3 rounded-3">
+                            <i class="bi bi-shield-check me-2"></i> <strong>Member of Cyprus Rental Vehicle Association</strong>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <a href="/explore" class="btn btn-primary w-100" style="background-color:#f86716; border:none;">🚗 Explore our fleet →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================== STATS / CREDIBILITY BANNER ======================== -->
+<section class="py-4 bg-dark text-white text-center">
+    <div class="container">
+        <div class="row justify-content-center gy-3">
+            <div class="col-sm-4 col-lg-3">
+                <div class="d-flex flex-column">
+                    <i class="bi bi-car-front-fill fs-1 mb-2" style="color:#f86716;"></i>
+                    <span class="fw-bold display-6">180+</span>
+                    <span>Modern vehicles</span>
+                </div>
+            </div>
+            <div class="col-sm-4 col-lg-3">
+                <div class="d-flex flex-column">
+                    <i class="bi bi-emoji-smile-fill fs-1 mb-2" style="color:#f86716;"></i>
+                    <span class="fw-bold display-6">2,300+</span>
+                    <span>Happy customers</span>
+                </div>
+            </div>
+            <div class="col-sm-4 col-lg-3">
+                <div class="d-flex flex-column">
+                    <i class="bi bi-geo-alt-fill fs-1 mb-2" style="color:#f86716;"></i>
+                    <span class="fw-bold display-6">3</span>
+                    <span>Pickup locations</span>
+                </div>
+            </div>
+            <div class="col-sm-4 col-lg-3">
+                <div class="d-flex flex-column">
+                    <i class="bi bi-award-fill fs-1 mb-2" style="color:#f86716;"></i>
+                    <span class="fw-bold display-6">100%</span>
+                    <span>Licensed & Insured</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================== CALL TO ACTION (ready to explore) ======================== -->
+<section class="py-5 text-center">
+    <div class="container">
+        <div class="bg-primary bg-opacity-10 p-5 rounded-4">
+            <h2 class="fw-bold">Ready to hit the road with AutoHire?</h2>
+            <p class="mb-4 lead">Book your next ride today and experience the freedom of transparent, affordable car rental.</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="/index" class="btn btn-lg px-4" style="background-color:#f86716; color:white;">Book a car <i class="bi bi-arrow-right"></i></a>
+                <a href="/faqs" class="btn btn-outline-secondary btn-lg px-4">Read FAQs</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======================== FOOTER ======================== -->
+<footer class="bg-dark text-light text-center py-4 mt-3">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div><small>&copy; {{ current_year if current_year else 2026 }} AutoHire — Smart mobility, powered by trust.</small></div>
+            <div class="mt-2 mt-sm-0">
+                <a href="/about" class="text-light text-decoration-none me-3 small">About</a>
+                <a href="/contact" class="text-light text-decoration-none me-3 small">Contact</a>
+                <a href="/privacy" class="text-light text-decoration-none small">Privacy</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Scripts (Bootstrap + main) -->
+<script src="/static/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/main.js"></script>
+<!-- Additional smooth interactions for stat cards (optional but harmless) -->
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        // any additional about page micro-interactions
+        const statCards = document.querySelectorAll('.stat-badge');
+        if(statCards.length) {
+            statCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateX(6px)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateX(0)';
+                });
+            });
+        }
+    });
+</script>
+{% include 'components/chat_widget.html' %}
+</body>
+</html>

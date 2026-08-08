@@ -1,0 +1,44 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Pending Approvals - AutoHire Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Pending Approvals</h2>
+    {% if pending %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Car VIN</th>
+                <th>Dates</th>
+                <th>Cost</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in pending %}
+            <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ r.user_email }}</td>
+                <td>{{ r.car_vin }}</td>
+                <td>{{ r.start_date }} – {{ r.end_date }}</td>
+                <td>{{ r.cost }}</td>
+                <td>
+                    <form method="POST" action="/admin/approve/{{ r.id }}" style="display:inline;">
+                        <button class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                    <form method="POST" action="/admin/reject/{{ r.id }}" style="display:inline;">
+                        <button class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No pending approvals.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Cars - AutoHire</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="stylesheet" href="static/fonts/bootstrap-icons.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <style>
+    /* Navigation link animations (copied from index.html) */
+    .secondary-nav-links .nav-link {
+        position: relative;
+        padding-bottom: 4px;
+        font-weight: 500;
+        transition: all 0.25s ease-in-out;
+    }
+    .secondary-nav-links .nav-link:hover {
+        transform: translateY(-2px);
+        text-shadow: 0 2px 8px rgba(255, 255, 255, 0.4);
+    }
+    .secondary-nav-links .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: #f86716;
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+    .secondary-nav-links .nav-link:hover::after {
+        width: 80%;
+    }
+    /* Button hover effects */
+    .btn:hover {
+        transform: scale(1.02) translateY(-2px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    }
+    .btn[style*="background-color: #f86716"]:hover {
+        background-color: #e05a0e !important;
+        border-color: #e05a0e !important;
+        box-shadow: 0 6px 14px rgba(248, 103, 22, 0.3);
+    }
+    .navbar-brand img:hover {
+        transform: scale(1.02);
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+    }
+    .rounded-circle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    }
+</style>
+</head>
+
+<body>
+    {% include 'components/alerts.html' %}
+    <nav class="navbar navbar-expand-lg border-body bg-primary p-2">
+    <div class="container-fluid">
+        <!-- Brand -->
+        <a class="navbar-brand" href="/">
+            <img src="{{ url_for('static', filename='images/header.png') }}" alt="AutoHire" height="35"
+                class="d-inline-block align-text-top">
+        </a>
+
+        <!-- Toggler for mobile -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Collapsible content -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <!-- Navigation Links (styled like secondary navbar) -->
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 secondary-nav-links">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/explore">Explore</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/about">About Us</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/faqs">FAQs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/contact">Contact Us</a>
+                </li>
+            </ul>
+
+            <!-- Right side: Profile & Logout -->
+            <div class="d-flex align-items-center ms-auto">
+                <div class="d-flex align-items-center text-light me-3">
+                    <img src="{{ user.get_profile_image_url() }}" alt="{{ user.get_name() }}"
+                        class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                    <div class="ms-2 d-none d-lg-block">
+                        <div class="fw-semibold text-start">{{ user.get_name() }}</div>
+                        <div class="text-light text-start small">{{ user.get_email() }}</div>
+                    </div>
+                </div>
+                <div class="vr text-white d-none d-lg-block"></div>
+                <a href="/profile" class="btn btn-outline-light mx-2">Profile</a>
+                <a href="/logout" class="btn btn-primary" style="background-color: #f86716; border-color: #f86716;">Logout
+                    <i class="bi bi-box-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+    {% block content %}
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="mb-4 text-center">
+            <h2 class="fw-bold">Available Cars</h2>
+            <p class="text-muted">From {{ start_date }} to {{ end_date }}</p>
+        </div>
+
+        <!-- Filter Tabs -->
+        <ul class="nav nav-pills justify-content-center mb-4">
+            <li class="nav-item">
+                <a class="nav-link {% if not selected_type %}active{% endif %}"
+                    href="{{ url_for('available_cars') }}?start={{ start_date }}&end={{ end_date }}">All</a>
+            </li>
+            {% for category in ["EconomyCar", "LuxuryCar", "CommercialCar"] %}
+            <li class="nav-item">
+                <a class="nav-link {% if selected_type == category %}active{% endif %}"
+                    href="{{ url_for('available_cars') }}?start={{ start_date }}&end={{ end_date }}&type={{ category }}">
+                    {{ category.replace('Car', '') }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Car Cards -->
+        <div class="row g-4">
+            {% if available_cars %}
+            {% for car in available_cars %}
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card custom-card h-100">
+                    <img src="{{ car.img_url }}" class="card-img-top" style="height: 180px; object-fit: cover;"
+                        alt="{{ car.model }}">
+
+                    <div class="card-body">
+                        <span class="badge bg-primary mb-2">{{ car.__class__.__name__.replace('Car', '') }}</span>
+                        <h5 class="card-title fw-semibold">{{ car.model }}</h5>
+                        <p class="text-muted small mb-2">VIN: {{ car.vin }}</p>
+
+                        <ul class="list-unstyled small">
+                            <li><i class="bi bi-people-fill me-2"></i>Seats: <b>{{ car.seating_capacity }}</b></li>
+                            <li><i class="bi bi-palette-fill me-2"></i>Colour: <b>{{ car.colour }}</b></li>
+                            <li><i class="bi bi-coin me-2"></i>Base Rate: <b>{{ car.base_rate }}
+                                    PKR/day</b></li>
+                        </ul>
+                    </div>
+                    <button class="btn mt-2 btn-outline-primary view-details-btn"
+                        style="border-radius: 0px 0px 10px 10px;"
+                        data-car='{{ car.to_dict() | tojson | safe }}' data-start="{{ start_date }}"
+                        data-end="{{ end_date }}" data-start-time="{{ booking_context.start_time if booking_context else '' }}"
+                        data-end-time="{{ booking_context.end_time if booking_context else '' }}" data-pickup-loc="{{ booking_context.pickup_location if booking_context else '' }}"
+                        data-return-loc="{{ booking_context.return_location if booking_context else '' }}">
+                        Book now
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="col-12 text-center">
+                <p class="text-muted">No cars available for the selected dates.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock %}
+
+    <!-- Car Details Modal -->
+    <div class="modal fade" id="carDetailsModal" tabindex="-1" aria-labelledby="carModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="carModalLabel">Car Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4 px-4">
+                    <div class="row align-items-start g-3">
+                        <!-- Image -->
+                        <div class="col-md-5">
+                            <img id="modalImg" class="img-fluid rounded border" alt="Car Image">
+                        </div>
+
+                        <!-- Details -->
+                        <div class="col-md-7">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="fw-bold mb-1" id="modalModel"></h5>
+                                <span class="badge bg-primary" id="modalType"></span>
+                            </div>
+
+                            <p class="mb-1 text-muted small">VIN:</p>
+                            <p class="fw-semibold mb-2" id="modalVin"></p>
+
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <div>
+                                    <p class="mb-1 text-muted small">Colour:</p>
+                                    <p class="fw-semibold mb-0" id="modalColour"></p>
+                                </div>
+                                <div>
+                                    <p class="mb-1 text-muted small">Seating:</p>
+                                    <p class="fw-semibold mb-0" id="modalSeats"></p>
+                                </div>
+                            </div>
+
+                            <div id="modalExtraSpec" class="mb-2"></div>
+
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-baseline gap-2">
+                                    <h4 class="fw-bold text-primary mb-0" id="modalRate"></h4>
+                                    <span class="text-muted">/day</span>
+                                </div>
+                                <a class="btn btn-success btn-sm px-4" id="modalReserveBtn">Reserve</a>
+                            </div>
+
+                            <!-- Booking summary (added for booking context) -->
+                            <div id="modalBookingSummary" class="border-top pt-3">
+                                <p class="mb-1 text-muted small">Selected Period:</p>
+                                <p class="fw-semibold mb-1" id="modalDuration"></p>
+
+                                <div id="modalPriceBreakdown" class="small text-muted mb-2"></div>
+
+                                <div class="d-flex justify-content-between align-items-baseline">
+                                    <div class="text-muted">Total</div>
+                                    <h5 class="fw-bold text-primary mb-0" id="modalTotalPrice"></h5>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-semibold mt-3">Features</h6>
+                            <div class="d-flex flex-wrap gap-2 mb-3" id="modalFeatures"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const detailButtons = document.querySelectorAll(".view-details-btn");
+
+            detailButtons.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    try {
+                        // Parse car data safely
+                        const car = JSON.parse(this.dataset.car);
+                        const startDate = this.dataset.start;
+                        const endDate = this.dataset.end;
+                        const startTime = this.dataset.startTime || this.dataset.start_time || '';
+                        const endTime = this.dataset.endTime || this.dataset.end_time || '';
+                        const pickupLoc = this.dataset.pickupLoc || this.dataset.pickup_loc || '';
+                        const returnLoc = this.dataset.returnLoc || this.dataset.return_loc || '';
+
+                        // Build start/end strings (ISO-like) if times are present
+                        const start = startTime ? `${startDate}T${startTime}` : startDate;
+                        const end = endTime ? `${endDate}T${endTime}` : endDate;
+
+                        // Check if openCarModal function exists
+                        if (typeof openCarModal === 'function') {
+                            openCarModal(car, start, end, pickupLoc, returnLoc);
+                        } else {
+                            console.error('openCarModal function not found. Make sure main.js is loaded.');
+                            alert('Error: Could not open car details. Please refresh the page.');
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse car data:', e, this.dataset.car);
+                        alert('Error loading car data. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+    <script src="static/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/main.js"></script>
+    {% include 'components/chat_widget.html' %}
+</body>
+
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"><!-- Preconnect to external CDNs to reduce connection latency -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://unpkg.com">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoHire</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <!-- Leaflet CSS with integrity -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="stylesheet" href="static/fonts/bootstrap-icons.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/x-icon">
+    
+    <!-- Professional hover effects — clean, subtle, and brand-aligned -->
+    <style>
+        /* Smooth transitions for all interactive elements */
+        a, button, .btn, .nav-link, .promo-card, .benefit-card, .step-card, 
+        .navbar-brand img, .rounded-circle, .glass-box, .promo-image-wrap img,
+        .car-angle, .secondary-nav-links .nav-link, .promo-cta-btn {
+            transition: all 0.25s ease-in-out;
+        }
+
+        /* --- Navigation & brand --- */
+        .navbar-brand img:hover {
+            transform: scale(1.02);
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+        }
+
+        .navbar .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Profile image hover — subtle zoom */
+        .rounded-circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Secondary navbar links */
+        .secondary-nav-links .nav-link {
+            position: relative;
+            padding-bottom: 4px;
+            font-weight: 500;
+        }
+        .secondary-nav-links .nav-link:hover {
+            transform: translateY(-2px);
+            text-shadow: 0 2px 8px rgba(255, 255, 255, 0.4);
+        }
+        .secondary-nav-links .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #f86716;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .secondary-nav-links .nav-link:hover::after {
+            width: 80%;
+        }
+
+        /* --- Buttons (primary, success, etc) --- */
+        .btn {
+            transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1);
+            border-radius: 8px;
+        }
+        .btn:hover {
+            transform: scale(1.02) translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+        /* Keep logout orange special */
+        .btn[style*="background-color: #f86716"]:hover {
+            background-color: #e05a0e !important;
+            border-color: #e05a0e !important;
+            box-shadow: 0 6px 14px rgba(248, 103, 22, 0.3);
+        }
+        /* Primary blue hover */
+        .btn-primary:hover, .btn[style*="background-color: #0d6efd"]:hover {
+            background-color: #0b5ed7 !important;
+            border-color: #0a58ca !important;
+        }
+        /* Map picker buttons (blue with geo icon) */
+        #pickup_map_btn:hover, #return_map_btn:hover {
+            transform: scale(1.05);
+            background-color: #0a4ec2 !important;
+        }
+        /* Book Now button */
+        #findCarsBtn:hover {
+            transform: scale(1.01) translateY(-3px);
+            box-shadow: 0 12px 22px rgba(13, 110, 253, 0.25);
+            background-color: #0b5ed7 !important;
+        }
+
+        /* --- Glass box (booking form container) --- */
+        .glass-box {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+        .glass-box:hover {
+            transform: scale(1.005);
+            box-shadow: 0 25px 35px -8px rgba(0, 0, 0, 0.25);
+        }
+
+        /* --- Benefits cards --- */
+        .row.g-4.justify-content-center .col-sm-6 .p-4 {
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .row.g-4.justify-content-center .col-sm-6 .p-4:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 30px -8px rgba(0, 0, 0, 0.15) !important;
+            background-color: #ffffff !important;
+            border-color: rgba(13, 110, 253, 0.15);
+        }
+        /* Icon subtle pop */
+        .row.g-4.justify-content-center .col-sm-6 .p-4:hover i {
+            transform: scale(1.08);
+            transition: transform 0.2s;
+        }
+
+        /* --- Promotional Fleet cards --- */
+        .promo-card {
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            border-radius: 24px;
+            overflow: hidden;
+            will-change: transform;
+        }
+        .promo-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 24px 36px -12px rgba(0, 0, 0, 0.2) !important;
+        }
+        /* Dark promo specific */
+        .promo-dark:hover {
+            background-color: #1e2a3a !important;
+        }
+        /* Green promo cards */
+        .promo-green:hover {
+            background-color: #e8f3e8 !important;
+        }
+        /* Car images inside promo */
+        .promo-image-wrap img {
+            transition: transform 0.4s ease;
+        }
+        .promo-card:hover .promo-image-wrap img {
+            transform: scale(1.05) rotate(0.5deg);
+        }
+        /* Angled car group */
+        .car-angle {
+            transition: all 0.3s;
+        }
+        .angled-car-group:hover .car-angle-1 {
+            transform: translateX(-3px) scale(1.03);
+        }
+        .angled-car-group:hover .car-angle-2 {
+            transform: translateY(-5px) scale(1.05);
+        }
+        .angled-car-group:hover .car-angle-3 {
+            transform: translateX(3px) scale(1.03);
+        }
+        /* "Book Now for Flexible Cancellation!" link */
+        .promo-dark a:hover {
+            transform: translateX(4px);
+            display: inline-block;
+            color: #10f349 !important;
+        }
+
+        /* Promo CTA button */
+        .promo-cta-btn:hover {
+            transform: scale(1.03) translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            background-color: #1a4bbf !important; /* deeper blue */
+        }
+
+        /* --- 3 Steps cards --- */
+        .py-5.bg-light .col-sm-4 .p-4 {
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        .py-5.bg-light .col-sm-4 .p-4:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 20px 28px -10px rgba(13, 110, 253, 0.15) !important;
+            background-color: #ffffff !important;
+        }
+        .py-5.bg-light .col-sm-4 .p-4:hover i {
+            transform: scale(1.1);
+            transition: transform 0.2s;
+            color: #f86716;
+        }
+
+        /* --- Footer subtle hover --- */
+        footer small:hover {
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        /* --- Additional polish for inputs? Not necessary, but keeping it minimal --- */
+        .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+            border-color: #f86716;
+        }
+
+        /* Map modal unaffected, but map picker buttons already covered */
+        
+        /* Ensure modals and map interactions are not overridden */
+        .modal-content {
+            transition: none;
+        }
+    </style>
+</head>
+
+<body class="">
+    {% include 'components/alerts.html' %}
+    {% if request.args.get('require_booking') == 'true' %}
+<div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Booking Setup Required:</strong> To explore available vehicles and view detailed specifications, please first complete the booking form below with your preferred pickup/return dates, times, and locations.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+    <nav class="navbar navbar-expand-lg border-body bg-primary p-2">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='images/header.png') }}" alt="AutoHire" height="35"
+                    class="d-inline-block align-text-top"  loading="lazy">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo01"
+                aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
+
+            </div>
+            <div class="float-end p-2">
+                <div class="d-flex justify-content-start text-light">
+                    <!-- Profile Image -->
+                    <img src="{{ user.get_profile_image_url() }}" alt="user.get_name()"
+                        class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" loading="lazy">
+                    <!-- Text: name & email -->
+                    <div class="ms-2">
+                        <div class="fw-semibold text-start">{{ user.get_name() }}</div>
+                        <div class="text-light text-start small">{{ user.get_email() }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="vr mx-3" style="color: white;"></div>
+            <div class="float-end p-1">
+                <a href="/profile" class="btn btn-primary" style="background-color: transparent;">Profile</a>
+            </div>
+            <div class="float-end p-1">
+                <a href="/logout" class="btn btn-primary" style="background-color: #f86716; border-color: #f86716;">Logout <i
+                        class="bi bi-box-arrow-right" style="margin-left: 5px;"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Secondary Navbar (Links always visible, no burger) -->
+    <nav class="secondary-navbar d-flex justify-content-center align-items-center" aria-label="secondary navigation">
+        <div class="container-sm d-flex justify-content-center" >
+            <div class="nav-bg d-flex justify-content-center" style="width:100%;">
+                <ul class="nav align-items-center justify-content-around w-100 secondary-nav-links" style="background-color:black;">
+                    <li class="nav-item"><a class="nav-link text-white" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/explore">Explore</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/about">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/faqs">FAQs</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/contact">Contact Us</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="/wishlist">Wishlist</a></li>
+                    {% if pending_res %}
+<li class="nav-item">
+    <a class="nav-link text-white" href="{{ url_for('waiting_approval', reservation_id=pending_res.id) }}">
+        Pending Approval <span class="badge bg-warning">!</span>
+    </a>
+</li>
+{% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Use this line instead of the current one -->
+<div class="container-fluid hero-bg bg-light d-flex align-items-center justify-content-end pe-5" >
+        <div class="glass-box text-center p-5 rounded shadow">
+            <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
+                <h1 class="display-4 fw-bold text-white mb-3" style="margin:0;">AutoHire</h1>
+            </div>
+            <p class="lead text-white mb-4">Book your next ride with ease and comfort</p>
+
+            <!-- Advanced booking form -->
+            <form id="bookingForm" class="row justify-content-center g-3 mt-3" action="/book-query" method="post">
+                <div class="col-12">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ user.get_email() }}" required readonly>
+                </div>
+                <div class="col-md-6">
+                   <label for="pickup_date" class="form-label">Pickup Date</label>
+                   <input type="date" class="form-control" id="pickup_date" name="pickup_date" required>
+                 <div id="pickupDateError" class="date-error d-none" style="color:#ff4d4d; background:#fff0f0; padding:4px; border-radius:4px; margin-top:4px;">Please enter a correct date.</div>
+                </div>
+                <div class="col-md-6">
+    <label for="pickup_time" class="form-label">Pickup Time</label>
+    <input type="time" class="form-control" id="pickup_time" name="pickup_time" required>
+    <div id="pickupTimeError" class="text-danger small d-none" style="color:#ff4d4d;"></div>
+</div>
+                <div class="col-md-6">
+                     <label for="return_date" class="form-label">Return Date</label>
+                     <input type="date" class="form-control" id="return_date" name="return_date" required>
+                     <div id="returnDateError" class="date-error d-none" style="color:#ff4d4d; background:#fff0f0; padding:4px; border-radius:4px; margin-top:4px;">Please enter a correct date.</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="return_time" class="form-label">Return Time</label>
+                    <input type="time" class="form-control" id="return_time" name="return_time" required>
+                </div>
+                <div class="col-md-6 position-relative">
+                    <label for="pickup_location" class="form-label">Pickup Location</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="pickup_location" name="pickup_location" placeholder="Select on map" required>
+                        <button type="button" class="btn btn-success text-white" id="pickup_map_btn" title="Pick on map" style="background-color:blue"><i class="bi bi-geo-alt" style="font-size:1.05rem;"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-6 position-relative">
+                    <label for="return_location" class="form-label">Return Location</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="return_location" name="return_location" placeholder="Select on map" required>
+                        <button type="button" class="btn btn-success text-white" id="return_map_btn" title="Pick on map" style="background-color:blue"><i class="bi bi-geo-alt" style="font-size:1.05rem;"></i></button>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div id="bookingError" class="text-danger small d-none">You must select a minimum rental duration of 1 hour.</div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" id="findCarsBtn" class="btn text-light w-100" style="background-color: #0d6efd;border-color: #0d6efd;">BOOK NOW</button>
+                </div>
+            </form>
+            {% if pending_res %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('findCarsBtn');
+        if (btn) btn.disabled = true;
+
+        // Show the pending reservation modal
+        const pendingModal = new bootstrap.Modal(document.getElementById('pendingReservationModal'));
+        pendingModal.show();
+    });
+</script>
+{% endif %}
+
+            
+        </div>
+    </div>
+
+    <!-- Benefits Section -->
+    <section class="py-5 bg-white">
+        <div class="container text-center">
+            <h2 class="mb-4 fw-bold">Why Book with AutoHire?</h2>
+            <div class="row g-4 justify-content-center">
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="p-4 shadow-sm rounded bg-light h-100 benefit-card">
+                        <i class="bi bi-check-circle-fill fs-2 text-success mb-3"></i>
+                        <h5 class="fw-semibold">Verified Fleet</h5>
+                        <p class="text-muted">Every vehicle is inspected and fully serviced before every rental, so you drive with confidence.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="p-4 shadow-sm rounded bg-light h-100 benefit-card">
+                        <i class="bi bi-cash-coin fs-2 text-warning mb-3"></i>
+                        <h5 class="fw-semibold">Transparent Pricing</h5>
+                        <p class="text-muted">Clear daily and hourly rates with no hidden fees. Minute-level charges are shown in the booking breakdown for full transparency.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="p-4 shadow-sm rounded bg-light h-100 benefit-card">
+                        <i class="bi bi-clock-history fs-2 text-primary mb-3"></i>
+                        <h5 class="fw-semibold">Flexible Bookings</h5>
+                        <p class="text-muted">Reserve by hour or by day. Modify return times easily from your profile.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="p-4 shadow-sm rounded bg-light h-100 benefit-card">
+                        <i class="bi bi-shield-lock-fill fs-2 text-info mb-3"></i>
+                        <h5 class="fw-semibold">Safe & Secure</h5>
+                        <p class="text-muted">Comprehensive insurance and 24/7 roadside assistance available on selected vehicles for worry-free trips.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="p-4 shadow-sm rounded bg-light h-100 benefit-card">
+                        <i class="bi bi-tag-fill fs-2 text-success mb-3"></i>
+                        <h5 class="fw-semibold">Lowest Competitive Rates</h5>
+                        <p class="text-muted">We search our fleet to offer you competitive daily and hourly rates with promotions and seasonal discounts when available.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="p-4 shadow-sm rounded bg-light h-100 benefit-card">
+                        <i class="bi bi-credit-card-2-back-fill fs-2 text-primary mb-3"></i>
+                        <h5 class="fw-semibold">Easy Payment & Policies</h5>
+                        <p class="text-muted">Multiple payment options, simple cancellation rules, and clear booking policies make checkout fast and reliable.</p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="p-4 shadow-sm rounded bg-light h-100 benefit-card">
+                        <i class="bi bi-people-fill fs-2 text-warning mb-3"></i>
+                        <h5 class="fw-semibold">Trusted by Thousands</h5>
+                        <p class="text-muted">Join thousands of satisfied customers who rely on AutoHire for safe, affordable and convenient car rentals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Promotional Fleet Section -->
+    <section class="py-5 bg-light">
+        <div class="container text-center">
+            <h2 class="mb-1 fw-bold text-dark">Our Fleet. Your Keys.</h2>
+            <p class="text-muted mb-4">CAR RENTALS THAT FIT YOUR BUDGET</p>
+            <div class="row g-4 align-items-stretch promo-grid">
+                <div class="col-12 col-lg-8">
+                    <div class="promo-card promo-dark d-flex flex-column flex-lg-row align-items-center p-4 rounded shadow-sm">
+                        <div class="flex-grow-1 text-start">
+                            <h3 class="text-uppercase mb-2">Economical Save Options</h3>
+                            <small class="text-muted d-block mb-3 subtitle-black">COST-EFFECTIVE AutoHire's FLEET FOR CYPRUS</small>
+                            <p class="mb-3 text-dark">Explore the island affordably with our reliable and budget-friendly selection, ensuring both quality and savings throughout your journey.</p>
+                            <a href="/login" class="text-decoration-none text-dark fw-semibold" style="background-color: #fd3604">Book Now for Flexible Cancellation! &rsaquo;</a>
+                        </div>
+                        <div class="ms-lg-4 mt-3 mt-lg-0 promo-image-wrap">
+                            <img src="{{ url_for('static', filename='images/car-red.png') }}" alt="featured-car" class="img-fluid img-remove-bg" loading="lazy" style="max-height:140px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="promo-card promo-green p-4 rounded shadow-sm text-start h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <h5 class="mb-2">Your Wallet's Best Friend</h5>
+                            <p class="mb-3 text-dark-opacity">AutoHire's Trustworthy Rental Services</p>
+                        </div>
+                        <div class="text-end">
+                            <a href="/login" class="btn btn-dark promo-cta-btn" style="background-color: blue;">Book Early &amp; Save!</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="promo-card promo-green p-4 rounded shadow-sm text-start promo-bg-cover">
+                        <div class="promo-bg-overlay p-3 rounded">
+                            <h5 class="mb-2 text-white">Unbeatable Daily Deals</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-8">
+                    <div class="promo-card promo-green p-4 rounded shadow-sm text-center position-relative overflow-hidden">
+                        <h4 class="mb-2 text-dark">Savings in Motion</h4>
+                        <small class="d-block text-dark-opacity mb-3">DISCOVER UNMATCHED VALUE! AUTOHIRE'S BEST DEALS ON ECONOMICAL CARS</small>
+                        <div class="angled-car-group d-flex justify-content-center align-items-end gap-3">
+                            <img src="{{ url_for('static', filename='images/car-angle.png') }}" alt="angle1" class="car-angle car-angle-1 img-remove-bg" loading="lazy">
+                            <img src="{{ url_for('static', filename='images/car-angle.png') }}" alt="angle2" class="car-angle car-angle-2 img-remove-bg" loading="lazy">
+                            <img src="{{ url_for('static', filename='images/car-angle.png') }}" alt="angle3" class="car-angle car-angle-3 img-remove-bg" loading="lazy">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Steps Section -->
+    <section class="py-5 bg-light">
+        <div class="container text-center">
+            <h2 class="mb-4 fw-bold text-primary">Booking In Just 3 Steps</h2>
+            <p class="text-muted mb-4">Fast, simple and secure — get on the road in minutes with AutoHire.</p>
+            <div class="row align-items-top g-4">
+                <div class="col-sm-4">
+                    <div class="p-4 h-100 bg-white rounded shadow-sm step-card">
+                        <div class="mb-3"><i class="bi bi-search fs-1 text-primary"></i></div>
+                        <h5 class="fw-semibold">Search</h5>
+                        <p class="text-muted small">Enter pickup and return details to find available cars near you.</p>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="p-4 h-100 bg-white rounded shadow-sm step-card">
+                        <div class="mb-3"><i class="bi bi-card-checklist fs-1 text-primary"></i></div>
+                        <h5 class="fw-semibold">Select</h5>
+                        <p class="text-muted small">Choose the car that fits your needs — view details, pricing and minute-level breakdowns before reserving.</p>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="p-4 h-100 bg-white rounded shadow-sm step-card">
+                        <div class="mb-3"><i class="bi bi-credit-card-2-front fs-1 text-primary"></i></div>
+                        <h5 class="fw-semibold">Pay</h5>
+                        <p class="text-muted small">Secure checkout with card or local payment methods and instant confirmation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Pending reservation modal -->
+<div class="modal fade" id="pendingReservationModal" tabindex="-1" aria-labelledby="pendingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-dark" id="pendingModalLabel">
+                    <i class="bi bi-hourglass-split me-2"></i>Reservation Pending
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    You have a reservation that is waiting for admin approval.
+                    <strong>You cannot make a new booking until this reservation is either approved or rejected.</strong>
+                </p>
+                <p class="mt-3">Please check the <strong>Pending Approval</strong> link in the navigation bar for status updates.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Dismiss</button>
+                <a href="/waiting/{{ pending_res.id }}" class="btn btn-primary">View Status</a>
+            </div>
+        </div>
+    </div>
+</div>
+    <footer class="bg-dark text-light text-center py-3 mt-5">
+        <div class="container">
+            <small>&copy; {{ current_year }} AutoHire. All rights reserved.</small>
+        </div>
+    </footer>
+<!-- Map picker modal -->
+            <div class="modal fade" id="mapPickerModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Pick Location on Map</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="mapCanvas" style="height:450px; width:100%; background:#f5f5f5; display:flex; align-items:center; justify-content:center;">
+                                <div id="mapFallbackText" class="text-center text-muted p-3">Loading map...</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="saveMapLocationBtn">Save Location</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    <script src="static/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS with integrity -->
+    <script  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    <script  src="static/js/main.js"></script>
+{% include 'components/chat_widget.html' %}
+</body>
+</html>

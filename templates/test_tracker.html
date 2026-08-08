@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Tracker - AutoHire</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>#map { height: 500px; }</style>
+</head>
+<body>
+    <h2>Test Tracker for VIN: <span id="vinDisplay"></span></h2>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const vin = window.location.pathname.split('/').pop();
+        document.getElementById('vinDisplay').innerText = vin;
+
+        const map = L.map('map').setView([31.5204, 74.3587], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([31.5204, 74.3587]).addTo(map).bindPopup('Car').openPopup();
+
+        setInterval(() => {
+            fetch(`/get_location/${vin}`)
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Location:', data);
+                    const lat = parseFloat(data.lat);
+                    const lng = parseFloat(data.lng || data.lon);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        marker.setLatLng([lat, lng]);
+                        map.panTo([lat, lng]);
+                    }
+                })
+                .catch(err => console.warn('Fetch error:', err));
+        }, 3000);
+    </script>
+</body>
+</html>

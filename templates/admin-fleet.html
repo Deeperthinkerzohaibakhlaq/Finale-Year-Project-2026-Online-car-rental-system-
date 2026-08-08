@@ -1,0 +1,311 @@
+{% extends "admin_layout.html" %}
+{% block title %}Fleet Management – AutoHire{% endblock %}
+{% block content %}
+<main class="container mt-5">
+    <h1 class="">Fleet Management</h1>
+    <p class="mb-4 text-muted">Manage the rental fleet. View list of current fleet and add or remove cars.</p>
+
+    <section class="mb-5">
+        <div class="d-flex justify-content-between">
+            <h4 class="mb-3">Fleet Overview</h4>
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-primary btn-sm" onclick="openAddCarModal()">
+                    <i class="bi bi-plus-lg me-2"></i> Add New Car
+                </button>
+            </div>
+        </div>
+        <div class="container mt-4">
+            <div class="row">
+                <div class="row g-4">
+                    {% for car in cars %}
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <div class="card h-100 shadow-sm">
+                            <!-- Car Image -->
+                            <img src="{{ car.get_img_url() }}" class="card-img-top" alt="{{ car.get_model() }}"
+                                style="height: 180px; object-fit: cover;">
+
+                            <!-- Category Badge -->
+                            <div class="card-header text-center text-white bg-primary">
+                                {{ car.__class__.__name__ }}
+                            </div>
+
+                            <div class="card-body">
+                                <p class="text-muted small mb-1">VIN: {{ car.get_vin() }}</p>
+                                <h5 class="card-title">{{ car.get_model() }}</h5>
+                            </div>
+
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">Seating Capacity: <b>{{
+                                        car.get_seating_capacity() }}</b></li>
+
+                                {% if car.__class__.__name__ == 'EconomyCar' %}
+                                <li class="list-group-item d-flex justify-content-between">Fuel Efficiency: <b>{{
+                                        car.get_fuel_efficiency() }} km/l</b></li>
+                                {% elif car.__class__.__name__ == 'LuxuryCar' %}
+                                <li class="list-group-item d-flex justify-content-between">Chauffeur: <b>{{ 'Yes' if
+                                        car.get_chauffeur_available() else 'No' }}</b></li>
+                                {% elif car.__class__.__name__ == 'CommercialCar' %}
+                                <li class="list-group-item d-flex justify-content-between">Cargo Capacity: <b>{{
+                                        car.get_cargo_capacity() }} kg</b></li>
+                                {% endif %}
+
+                                <li class="list-group-item d-flex justify-content-between">Colour: <b>{{
+                                        car.get_colour()
+                                        }}</b></li>
+                                <li class="list-group-item d-flex justify-content-between">Status:
+                                    <b
+                                        class="{{ 'text-success' if not car.get_active_reservation() else 'text-danger' }}">
+                                        {{ 'Available' if not car.get_active_reservation() else 'Reserved' }}
+                                    </b>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">Base Rate:
+                                    <h5 class="text-end">{{ car.get_base_rate() }} PKR</h5>
+                                </li>
+                            </ul>
+
+                            <div class="card-body text-end">
+                                <button class="btn btn-warning btn-sm" data-car='{{ car.to_dict()|tojson | safe }}'
+                                    onclick="handleEditButtonClick(this)"><i class="bi bi-pencil-fill" style="margin-right: 5px;"></i> Edit</button>
+                                <form method="POST" action="/admin/delete_car/{{ car.vin }}"
+                                    onsubmit="return confirm('Are you sure you want to delete this car?');"
+                                    class="d-inline">
+                                    <button class="btn btn-danger btn-sm"><i class="bi bi-trash-fill" style="margin-right: 5px;"></i> Delete</button>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Add Car Modal -->
+<div class="modal fade" id="addCarModal" tabindex="-1" aria-labelledby="addCarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content p-3">
+            <form method="POST" id="carForm" action="/admin/add_car">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="carModalLabel">Modal Title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Basic Info -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="vin" class="form-label">VIN</label>
+                            <input type="text" class="form-control" id="vin" name="vin" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="model" class="form-label">Model</label>
+                            <input type="text" class="form-control" id="model" name="model" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="base_rate" class="form-label">Base Rate (PKR)</label>
+                            <input type="number" class="form-control" id="base_rate" name="base_rate" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="seating_capacity" class="form-label">Seating Capacity</label>
+                            <input type="number" class="form-control" id="seating_capacity" name="seating_capacity"
+                                required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="colour" class="form-label">Colour</label>
+                            <input type="text" class="form-control" id="colour" name="colour" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="car_type" class="form-label">Category</label>
+                            <select class="form-select" id="car_type" name="car_type" required
+                                onchange="toggleCarFields(this.value)">
+                                <option value="" disabled selected>Select type</option>
+                                <option value="EconomyCar">Economy</option>
+                                <option value="LuxuryCar">Luxury</option>
+                                <option value="CommercialCar">Commercial</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="img_url" class="form-label">Image URL</label>
+                            <input type="url" class="form-control" id="img_url" name="img_url">
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <fieldset class="border rounded p-3 mb-3">
+                        <legend class="w-auto px-2 fs-6">Features</legend>
+                        <div class="row">
+                            {% for feature in ['air_conditioning', 'bluetooth', 'gps', 'usb_ports', 'sunroof',
+                            'rear_camera'] %}
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="features[{{ feature }}]"
+                                        id="{{ feature }}" value="true">
+                                    <label class="form-check-label" for="{{ feature }}">
+                                        {{ feature.replace('_', ' ').title() }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+
+                    <!-- Dynamic Fields by Category -->
+                    <div id="economy-fields" class="d-none mb-3">
+                        <label for="fuel_efficiency" class="form-label">Fuel Efficiency (km/l)</label>
+                        <input type="number" min="1" step="0.1" class="form-control" name="fuel_efficiency"
+                            id="fuel_efficiency">
+                    </div>
+
+                    <div id="luxury-fields" class="d-none mb-3">
+                        <label for="chauffeur_available" class="form-label">Chauffeur Available</label>
+                        <select class="form-select" name="chauffeur_available" id="chauffeur_available">
+                            <option value="1">Yes</option>
+                            <option value="0" selected>No</option>
+                        </select>
+                    </div>
+
+                    <div id="commercial-fields" class="d-none mb-3">
+                        <label for="cargo_capacity" class="form-label">Cargo Capacity (kg)</label>
+                        <input type="number" class="form-control" name="cargo_capacity" id="cargo_capacity">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success"><i class="bi bi-plus" style="margin-right: 5px;"></i>Add Car</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function toggleCarFields(type) {
+        document.getElementById("economy-fields").classList.add("d-none");
+        document.getElementById("luxury-fields").classList.add("d-none");
+        document.getElementById("commercial-fields").classList.add("d-none");
+
+        if (type === "EconomyCar" || type === "Economy") {
+            document.getElementById("economy-fields").classList.remove("d-none");
+        } else if (type === "LuxuryCar" || type === "Luxury") {
+            document.getElementById("luxury-fields").classList.remove("d-none");
+        } else if (type === "CommercialCar" || type === "Commercial") {
+            document.getElementById("commercial-fields").classList.remove("d-none");
+        }
+    }
+
+    function handleEditButtonClick(button) {
+        try {
+            const car = JSON.parse(button.dataset.car);
+            openEditCarModal(car);
+        } catch (err) {
+            console.error('Failed to parse car data for edit button:', err);
+            alert('Error loading car data. Please try again.');
+        }
+    }
+
+    function openEditCarModal(car) {
+        const get = (obj, ...keys) => {
+            for (const k of keys) {
+                if (obj == null) continue;
+                if (k in obj) return obj[k];
+            }
+            return undefined;
+        };
+
+        const vin = get(car, 'vin', 'VIN');
+        const model = get(car, 'model', 'Model');
+        const base_rate = get(car, 'base_rate', 'baseRate', 'base_rate');
+        const img_url = get(car, 'img_url', 'imgUrl', 'img_url');
+        const seating_capacity = get(car, 'seating_capacity', 'seatingCapacity');
+        const colour = get(car, 'colour', 'color', 'Colour');
+        const car_type = get(car, 'car_type', 'category', 'type');
+        const features = get(car, 'features', 'feature', {});
+
+        const setIf = (id, value) => { const el = document.getElementById(id); if (el && value !== undefined && value !== null) el.value = value; };
+        setIf('vin', vin);
+        setIf('model', model);
+        setIf('base_rate', base_rate);
+        setIf('img_url', img_url);
+        setIf('seating_capacity', seating_capacity);
+        setIf('colour', colour);
+        setIf('car_type', car_type);
+
+        const vinEl = document.getElementById('vin'); if (vinEl) vinEl.disabled = true;
+
+        try {
+            if (features && typeof features === 'object') {
+                for (const [feature, value] of Object.entries(features)) {
+                    const checkbox = document.getElementById(feature);
+                    if (checkbox) checkbox.checked = value === true || value === 'true' || value === '1' || value === 1;
+                }
+            }
+        } catch (e) { console.warn('Error setting feature checkboxes', e); }
+
+        toggleCarFields(car_type);
+        if (car_type === 'EconomyCar' || car_type === 'Economy') {
+            setIf('fuel_efficiency', get(car, 'fuel_efficiency', 'fuelEfficiency'));
+        } else if (car_type === 'LuxuryCar' || car_type === 'Luxury') {
+            const chauff = get(car, 'chauffeur_available', 'chauffeurAvailable');
+            const chauffEl = document.getElementById('chauffeur_available'); if (chauffEl) chauffEl.value = chauff ? (chauff === true || chauff === '1' || chauff === 'true' ? '1' : '0') : '0';
+        } else if (car_type === 'CommercialCar' || car_type === 'Commercial') {
+            setIf('cargo_capacity', get(car, 'cargo_capacity', 'cargoCapacity'));
+        }
+
+        const form = document.querySelector('#carForm'); if (form) form.action = `/admin/edit_car/${vin}`;
+
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="bi bi-pencil-fill" style="margin-right: 5px;"></i> Update Car';
+            submitBtn.classList.remove('btn-success');
+            submitBtn.classList.add('btn-warning');
+        }
+
+        const titleEl = document.getElementById('carModalLabel'); if (titleEl) titleEl.innerText = 'Edit Car';
+
+        const modal = new bootstrap.Modal(document.getElementById('addCarModal'));
+        modal.show();
+    }
+
+    function openAddCarModal() {
+        document.getElementById("carForm").reset();
+
+        const vinInput = document.getElementById("vin");
+        if (vinInput) {
+            vinInput.disabled = false;
+            vinInput.value = "";
+        }
+
+        const features = ["air_conditioning", "bluetooth", "gps", "usb_ports", "sunroof", "rear_camera"];
+        features.forEach(f => {
+            const cb = document.getElementById(f);
+            if (cb) cb.checked = false;
+        });
+
+        toggleCarFields("");
+
+        const fuelEff = document.getElementById("fuel_efficiency"); if (fuelEff) fuelEff.value = "";
+        const chauff = document.getElementById("chauffeur_available"); if (chauff) chauff.value = "0";
+        const cargo = document.getElementById("cargo_capacity"); if (cargo) cargo.value = "";
+
+        const form = document.getElementById("carForm");
+        if (form) form.action = "/admin/add_car";
+
+        const titleEl = document.getElementById('carModalLabel');
+        if (titleEl) titleEl.innerText = "Add New Car";
+
+        const modal = new bootstrap.Modal(document.getElementById('addCarModal'));
+        modal.show();
+    }
+</script>
+{% endblock %}

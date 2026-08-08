@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AutoHire Admin{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='fonts/bootstrap-icons.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/x-icon">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% include 'components/alerts.html' %}
+
+<nav class="navbar navbar-expand-lg border-body bg-primary p-2">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <img src="{{ url_for('static', filename='images/header.png') }}" alt="AutoHire" height="35"
+                class="d-inline-block align-text-top" loading="lazy">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo01"
+            aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item dropdown">
+                    <button class="btn text-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        Admin
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin-fleet">Manage Fleet</a></li>
+                        <li><a class="dropdown-item" href="/admin-report">Report Management</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin/manage-approved">Manage Approved Reservations</a></li>
+                        <li><a class="dropdown-item" href="/admin/inquiries">
+                            Client Inquiries
+                            {% if unread_inquiries and unread_inquiries > 0 %}
+                            <span class="badge bg-danger ms-2">{{ unread_inquiries }}</span>
+                            {% endif %}
+                        </a></li>
+                        <li><a class="dropdown-item" href="/admin/track-reserved">Track Reserved Cars</a></li>
+                    </ul>
+                </li>
+                {% if show_pending_approvals %}
+                <li class="nav-item">
+                    <a class="nav-link text-white position-relative" href="/admin/pending-approvals">
+                        Pending Approvals
+                        {% if pending_count %}
+                        <span class="badge bg-danger ms-1">{{ pending_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="float-end p-2">
+                <div class="d-flex justify-content-start text-light">
+                    <img src="{{ user.get_profile_image_url() }}" alt="{{ user.get_name() }}"
+                         class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" loading="lazy">
+                    <div class="ms-2">
+                        <div class="fw-semibold text-start">{{ user.get_name() }}</div>
+                        <div class="text-light text-start small">{{ user.get_email() }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="vr mx-3" style="color: white;"></div>
+            <div class="float-end p-1">
+                <a href="/profile" class="btn btn-primary">Profile</a>
+            </div>
+            <a href="/logout" class="btn btn-primary" style="background-color: #f86716;">Logout <i
+                    class="bi bi-box-arrow-right" style="margin-left: 5px;"></i></a>
+        </div>
+    </div>
+</nav>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="bg-dark text-light text-center py-3 mt-5">
+    <div class="container">
+        <small>&copy; {{ current_year }} AutoHire. All rights reserved.</small>
+    </div>
+</footer>
+
+<script defer src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - AutoHire</title>
+    <link rel="stylesheet" href="static/css/bootstrap.css">
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="stylesheet" href="static/fonts/bootstrap-icons.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    <style>
+        .table th, .table td { vertical-align: middle; }
+        .badge { font-weight: 500; padding: 0.35em 0.65em; }
+        .card-header i, .card-title i { margin-right: 0.25rem; }
+        .alert i { margin-right: 0.5rem; }
+    </style>
+</head>
+<body>
+    {% include 'components/alerts.html' %}
+    <nav class="navbar navbar-expand-lg border-body bg-primary p-2">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='images/header.png') }}" alt="AutoHire" height="35"
+                    class="d-inline-block align-text-top">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo01"
+                aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item fw-bold">
+                        <a class="nav-link text-light" aria-current="page" href="/">Home</a>
+                    </li>
+                    {% if role == "admin" %}
+                    <li class="nav-item dropdown">
+                        <button class="btn text-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            Admin
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu">
+                            <li><a class="dropdown-item" href="/admin-fleet">Manage Fleet</a></li>
+                            <li><a class="dropdown-item" href="/admin-report">Report Management</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="float-end p-2">
+                <div class="d-flex justify-content-start text-light">
+                    <img src="{{ user.get_profile_image_url() }}" alt="{{ user.get_name() }}" class="rounded-circle"
+                        style="width: 40px; height: 40px; object-fit: cover;">
+                    <div class="ms-2">
+                        <div class="fw-semibold text-start">{{ user.get_name() }}</div>
+                        <div class="text-light text-start small">{{ user.get_email() }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="vr mx-3" style="color: white;"></div>
+            <div class="float-end p-1">
+                <a href="/profile" class="btn btn-primary">Profile</a>
+            </div>
+            <div class="float-end p-1">
+                <a href="/logout" class="btn btn-primary" style="background-color: #f86716;">Logout <i
+                        class="bi bi-box-arrow-right" style="margin-left: 5px;"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    {% block content %}
+    <div class="container py-5">
+        <div class="text-center mb-4">
+            <img src="{{ user.get_profile_image_url() }}" alt="Profile Image" class="rounded-circle shadow-sm"
+                width="120" height="120" style="object-fit: cover;">
+            <h3 class="mt-3">{{ user.get_name() }}</h3>
+            <span class="badge bg-secondary text-capitalize">{{ user.get_role() }}</span>
+            <p class="text-muted">{{ user.get_email() }}</p>
+        </div>
+
+        <!-- Wallet Balance Card -->
+        <div class="card mb-4 shadow-sm border-primary">
+            <div class="card-body">
+                <h5 class="card-title mb-1"><i class="bi bi-wallet2"></i> Wallet Balance</h5>
+                <p class="display-6 fw-bold text-primary" id="walletBalance">{{ "%.2f"|format(user.get_balance()) }} PKR</p>
+                <p class="text-muted small">Funds added during registration. No additional top‑ups are available.</p>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">Profile Info</button></li>
+            <li class="nav-item"><button class="nav-link" id="edit-tab" data-bs-toggle="tab" data-bs-target="#edit" type="button" role="tab">Edit Profile</button></li>
+            {% if user.role == 'user' %}
+            <li class="nav-item"><button class="nav-link" id="reservations-tab" data-bs-toggle="tab" data-bs-target="#reservations" type="button" role="tab">Reservations</button></li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content" id="profileTabsContent">
+            <div class="tab-pane fade show active" id="info" role="tabpanel">
+                <div class="card p-4 shadow-sm">
+                    <h5 class="mb-3">Personal Details</h5>
+                    <p><strong>Name:</strong> {{ user.get_name() }}</p>
+                    <p><strong>Email:</strong> {{ user.get_email() }}</p>
+                    {% if user.get_role() == 'user' %}
+                    <p><strong>Date of Birth:</strong> {{ user.get_birth_date() if user.get_birth_date() else 'Not set' }}</p>
+                    <p><strong>License Number:</strong> {{ user.get_license_number() or 'Not set' }}</p>
+                    <p><strong>License Expiry:</strong> {{ user.get_license_expiry() or 'Not set' }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="edit" role="tabpanel">
+                <div class="card p-4 shadow-sm">
+                    <h5 class="mb-3">Edit Profile</h5>
+                    <form method="POST" action="/edit-profile">
+                        <div class="mb-3">
+                            <label for="nameInp" class="form-label">Name</label>
+                            <input type="text" class="form-control" name="name" value="{{ user.get_name() }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="profileImgInp" class="form-label">Profile Image URL</label>
+                            <input type="url" class="form-control" name="profile_image" value="{{ user.get_profile_image_url() }}">
+                        </div>
+                        {% if user.role == 'user' %}
+                        <div class="mb-3">
+                            <label for="licenseNum" class="form-label">License Number</label>
+                            <input type="text" class="form-control" name="license_number" value="{{ user.get_license_number() }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="licenseExpiry" class="form-label">License Expiry</label>
+                            <input type="date" class="form-control" name="license_expiry" value="{{ user.get_license_expiry() }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="birthDate" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" name="birth_date" value="{{ user.get_birth_date().isoformat() if user.get_birth_date() else '' }}" required>
+                            <div class="form-text small">You must be at least 21 to rent a car.</div>
+                        </div>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+                    </form>
+                    <hr class="my-4">
+                    <div class="text-end">
+                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete My Account</button>
+                    </div>
+                    <div class="modal fade" id="deleteModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <form method="POST" action="/delete-account" class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title text-danger">Confirm Account Deletion</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                                    <p class="text-muted small">Your data and history will be permanently removed.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if user.role == 'user' %}
+            <div class="tab-pane fade" id="reservations" role="tabpanel">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-4"><i class="bi bi-calendar-check me-2"></i>Your Reservations</h5>
+
+                        <!-- ACTIVE RESERVATION -->
+                        {% if active_res %}
+                            {% if active_res.status == 'admin_cancelled' %}
+                                <div class="alert alert-danger d-flex align-items-center mb-4">
+                                    <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                                    <div><strong>Admin Cancelled!</strong> Please return the car immediately to avoid daily fines of <strong>1,000 PKR</strong>.</div>
+                                </div>
+                                <div class="card mb-4 border-danger">
+                                    <div class="card-header bg-danger text-white"><i class="bi bi-car-front-fill me-2"></i>Cancelled Reservation</div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Reservation ID:</strong> {{ active_res.get_id() }}</p>
+                                                <p><strong>Car:</strong> {{ active_car.get_model() if active_car else active_res.get_car_vin() }}</p>
+                                                <p><strong>VIN:</strong> {{ active_res.get_car_vin() }}</p>
+                                                <p><strong>Cost:</strong> {{ "%.2f"|format(active_res.get_cost()) }} PKR</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Pickup:</strong> {{ active_res.get_pickup_location() or "Depot" }}</p>
+                                                <p><strong>Return:</strong> {{ active_res.get_return_location() or "Depot" }}</p>
+                                                <p><strong>Fine:</strong> <span class="text-danger fw-bold">{{ compute_admin_fine(active_res) }} PKR</span></p>
+                                            </div>
+                                        </div>
+                                        <form method="POST" action="/return-car" onsubmit="return confirm('Return the car now? Fine will be deducted.');">
+                                            <button type="submit" class="btn btn-warning"><i class="bi bi-arrow-return-left"></i> Return Car Now</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info d-flex align-items-center mb-4">
+                                    <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                                    <div>Active from <strong>{{ active_res.get_start_date() }}</strong> to <strong>{{ active_res.get_end_date() }}</strong>.</div>
+                                </div>
+                                <div class="card mb-4 border-primary">
+                                    <div class="card-header bg-primary text-white"><i class="bi bi-calendar-check-fill"></i> Current Rental</div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Reservation ID:</strong> {{ active_res.get_id() }}</p>
+                                                <p><strong>Car:</strong> {{ active_car.get_model() if active_car else active_res.get_car_vin() }}</p>
+                                                <p><strong>VIN:</strong> {{ active_res.get_car_vin() }}</p>
+                                                <p><strong>Cost:</strong> {{ "%.2f"|format(active_res.get_cost()) }} PKR</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Pickup:</strong> {{ active_res.get_pickup_location() or "Depot" }}</p>
+                                                <p><strong>Return:</strong> {{ active_res.get_return_location() or "Depot" }}</p>
+                                                <p><strong>Deposit:</strong> {{ "%.2f"|format(active_res.get_deposit_amount()) }} PKR</p>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2 mt-3">
+                                            <a href="/modify/{{ active_res.get_id() }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Modify</a>
+                                            <button class="btn btn-outline-danger" onclick="cancelReservation('{{ active_res.get_id() }}')"><i class="bi bi-x-circle"></i> Cancel</button>
+                                            <a href="/track/{{ active_res.get_id() }}" class="btn btn-success"><i class="bi bi-geo-alt-fill"></i> Track</a>
+                                            <form method="POST" action="/return-car" class="d-inline"><button type="submit" class="btn btn-danger"><i class="bi bi-arrow-return-left"></i> Return</button></form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="alert alert-success mb-4"><i class="bi bi-check-circle-fill me-2"></i> No active reservations.</div>
+                        {% endif %}
+
+                        <!-- PAST RESERVATIONS TABLE -->
+                        <h5 class="mt-5 mb-3"><i class="bi bi-clock-history me-2"></i>Past Reservations</h5>
+                        {% if inactive_items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Car</th>
+                                        <th>Rental Period</th>
+                                        <th>Returned</th>
+                                        <th>Cost</th>
+                                        <th>Status</th>
+                                        <th>Refund / Fine</th>
+                                        <th>Review</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in inactive_items %}
+                                    {% set res = item.res %}
+                                    {% set car = item.car %}
+                                    <tr>
+                                        <td><code>{{ res.get_id()[:8] }}...</code></td>
+                                        <td>
+                                            <strong>{{ car.get_model() if car else res.get_car_vin() }}</strong><br>
+                                            <small class="text-muted">{{ res.get_car_vin() }}</small>
+                                        </td>
+                                        <td>{{ res.get_start_date() }} → {{ res.get_end_date() }}</td>
+                                        <td>{{ res.get_return_date() if res.get_return_date() else '—' }}</td>
+                                        <td>{{ "%.2f"|format(res.get_cost()) }} PKR</td>
+                                        <td>
+                                            {% if res.get_status() == 'inactive' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif res.get_status() == 'cancelled' %}
+                                                <span class="badge bg-secondary">Cancelled</span>
+                                            {% elif res.get_status() == 'pending' %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% else %}
+                                                <span class="badge bg-info">{{ res.get_status() }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if res.get_early_refund() and res.get_early_refund() > 0 %}
+                                                <span class="badge bg-success">+{{ "%.2f"|format(res.get_early_refund()) }}</span>
+                                            {% endif %}
+                                            {% if res.get_late_fee() and res.get_late_fee() > 0 %}
+                                                <span class="badge bg-danger">-{{ "%.2f"|format(res.get_late_fee()) }}</span>
+                                            {% endif %}
+                                            {% if not res.get_early_refund() and not res.get_late_fee() %}—{% endif %}
+                                        </td>
+                                        <!-- REVIEW BUTTON with conditional logic -->
+                                        <td>
+                                            {% if item.has_review %}
+                                                <button class="btn btn-sm btn-outline-info view-review-btn"
+                                                        data-reservation-id="{{ res.get_id() }}"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#viewReviewModal">
+                                                    <i class="bi bi-eye"></i> View Review
+                                                </button>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-outline-secondary"
+                                                        onclick="location.href='/cars/{{ res.get_car_vin() }}?review_for={{ res.get_id() }}'">
+                                                    <i class="bi bi-star"></i> Write
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">No past reservations.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock %}
+
+    <!-- Modal for viewing a review -->
+    <div class="modal fade" id="viewReviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Your Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <span id="reviewRating" class="badge bg-warning text-dark fs-6"></span>
+                    </div>
+                    <p id="reviewComment" class="lead"></p>
+                    <small class="text-muted" id="reviewDate"></small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/main.js"></script>
+    <script>
+        function cancelReservation(reservationId) {
+            if (confirm("Cancel this reservation? Refund depends on how early you cancel.")) {
+                fetch(`/cancel/${reservationId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Reservation cancelled. Refund: " + data.refund + " PKR will be credited.");
+                        location.reload();
+                    } else alert("Error: " + data.message);
+                })
+                .catch(error => alert("Network error."));
+            }
+        }
+
+        // Populate the review modal when "View Review" is clicked
+        document.querySelectorAll('.view-review-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const reservationId = this.dataset.reservationId;
+                fetch(`/api/reservation-review/${reservationId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.exists) {
+                            const stars = '⭐'.repeat(data.rating) + '☆'.repeat(5 - data.rating);
+                            document.getElementById('reviewRating').innerHTML = `${stars} (${data.rating}/5)`;
+                            document.getElementById('reviewComment').innerText = data.comment || '(No comment provided)';
+                            document.getElementById('reviewDate').innerText = `Reviewed on ${data.created_at}`;
+                        } else {
+                            document.getElementById('reviewRating').innerHTML = '';
+                            document.getElementById('reviewComment').innerText = 'Review not found.';
+                            document.getElementById('reviewDate').innerText = '';
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        document.getElementById('reviewComment').innerText = 'Error loading review.';
+                    });
+            });
+        });
+    </script>
+{% include 'components/chat_widget.html' %}
+</body>
+</html>

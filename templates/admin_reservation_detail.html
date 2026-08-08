@@ -1,0 +1,35 @@
+{% extends "admin_layout.html" %}
+{% block title %}Reservation {{ reservation.id }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Reservation Details</h2>
+    <table class="table table-bordered">
+        <tr><th>Reservation ID</th><td>{{ reservation.id }}</td></tr>
+        <tr><th>User</th>
+            <td>
+                <img src="{{ reservation_user.get_profile_image_url() }}" alt="{{ reservation_user.name }}" 
+                     style="width: 32px; height: 32px; object-fit: cover; border-radius: 50%;" class="me-2">
+                {{ reservation_user.name }} ({{ reservation_user.email }})
+            </td>
+        </tr>
+        <tr><th>Car</th><td>{{ car.model }} ({{ car.vin }})</td></tr>
+        <tr><th>Dates</th><td>{{ reservation.start_date }} to {{ reservation.end_date }}</td></tr>
+        <tr><th>Times</th>
+            <td>{{ reservation.get_start_time() if reservation.get_start_time() else 'N/A' }} – {{ reservation.get_end_time() if reservation.get_end_time() else 'N/A' }}</td>
+        </tr>
+        <tr><th>Pickup Location</th><td>{{ reservation.pickup_location or 'N/A' }}</td></tr>
+        <tr><th>Return Location</th><td>{{ reservation.return_location or 'N/A' }}</td></tr>
+        <tr><th>Cost</th><td>{{ reservation.cost }} PKR</td></tr>
+        <tr><th>Status</th><td><span class="badge bg-success">{{ reservation.status }}</span></td></tr>
+    </table>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin_edit_reservation', rid=reservation.id) }}" class="btn btn-primary">Edit</a>
+        {% if reservation.status == 'active' %}
+        <a href="{{ url_for('report_damage', reservation_id=reservation.id) }}" class="btn btn-warning">Report Damage</a>
+        {% endif %}
+        <form method="POST" action="{{ url_for('admin_delete_reservation', rid=reservation.id) }}" onsubmit="return confirm('Are you sure you want to delete this reservation?');">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

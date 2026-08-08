@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Track Reservation {{ reservation.get_id() }} - AutoHire</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+    <!-- Leaflet CSS with integrity -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="" />
+    <!-- Leaflet fullscreen plugin CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.fullscreen/Control.FullScreen.css" />
+    <style>
+        /* Professional tracking layout */
+        body { background: #f4f7fb; }
+        .tracking-header { margin: 24px 0; }
+        #map { 
+            height: 640px; 
+            width: 100%; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(18, 52, 30, 0.08);
+            border: 2px solid #e9ecef;
+        }
+        .info-panel { 
+            background: #ffffff; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 6px 20px rgba(6, 24, 10, 0.06);
+            border-left: 4px solid #28a745;
+        }
+        .info-panel h4 { 
+            margin-bottom: 16px;
+            color: #1fa65a;
+            font-weight: 700;
+        }
+        .badge-status { 
+            font-size: 0.95rem; 
+            padding: 8px 14px; 
+            border-radius: 999px;
+            font-weight: 600;
+        }
+        .info-row { display:flex; justify-content:space-between; gap:12px; }
+        .info-col { flex:1; }
+        .muted { color: #6c757d; }
+        
+        /* Styling for route elements */
+        .shortest-route {
+            filter: drop-shadow(0 2px 4px rgba(31, 166, 90, 0.28));
+        }
+        
+        /* Destination and starting point boxes */
+        .location-box {
+            background: #f8f9fa;
+            padding: 12px; 
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .location-box.destination {
+            border-left-color: #007bff;
+        }
+        
+        .location-box.origin {
+            border-left-color: #28a745;
+        }
+        
+        @media (max-width: 768px) { 
+            #map { height: 420px; } 
+            .info-panel { margin-top: 16px; } 
+        }
+    </style>
+    <style>
+        /* Simple depot pin (small, professional) */
+        .depot-pin { width:28px; height:36px; display:block; }
+        .depot-pin svg { display:block; }
+
+        /* Live car glowing point - changed to red */
+        .live-ring { width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+        .live-dot { width:8px; height:8px; border-radius:50%; background:#ff3333; box-shadow:0 0 8px rgba(255,51,51,0.9); }
+        .live-ring::after { content:''; position:absolute; width:26px; height:26px; border-radius:50%; box-shadow:0 0 0 rgba(255,51,51,0.55); animation: pulse 1.8s infinite; }
+        .live-point-icon { position:relative; width:26px; height:26px; }
+        @keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(255,59,48,0.45);} 70% { box-shadow:0 0 0 10px rgba(255,59,48,0);} 100% { box-shadow:0 0 0 0 rgba(255,59,48,0);} }
+
+        /* Smooth marker movement - prevents jumping */
+        .leaflet-marker-icon {
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        }
+        .leaflet-marker-icon.leaflet-zoom-animated {
+            transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+    <h2>Live Car Tracking - Reservation #{{ reservation.get_id() }}</h2>
+    <p>Car Model: <strong>{{ car.get_model() }}</strong> (VIN: <span id="car-vin-display">{{ car_vin }}</span>)</p>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="info-panel mb-4">
+                <h4><i class="bi bi-clock-fill"></i> Arrival Details</h4>
+                <div style="margin-bottom: 12px;">
+                    <p style="margin-bottom: 4px;"><strong>Status:</strong></p>
+                    <span id="car-status" class="badge-status badge bg-success">Tracking Active</span>
+                </div>
+                <hr>
+                <p><strong>ETA:</strong> <span id="time-left" class="fw-bold fs-4">Calculating...</span></p>
+                <p><strong>Distance to Destination:</strong> <span id="distance-left" class="fw-bold text-primary">---</span></p>
+                <p><strong>Route Distance:</strong> <span id="route-distance" class="text-muted">Loading...</span></p>
+                <hr>
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                    <p style="margin-bottom: 6px; color: #666; font-size: 0.9rem;">
+                        <i class="bi bi-pin-fill" style="color: #28a745;"></i> <strong>Starting Point:</strong>
+                    </p>
+                    <p class="fw-semibold">{{ depot.name }}</p>
+                </div>
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px;">
+                    <p style="margin-bottom: 6px; color: #666; font-size: 0.9rem;">
+                        <i class="bi bi-flag-fill" style="color: #007bff;"></i> <strong>Customer Pickup Location:</strong>
+                    </p>
+                    <p class="fw-semibold" id="destination-name">{{ client.name }}</p>
+                    <p style="margin: 0; font-size: 0.85rem; color: #666;">Vehicle: {{ car.get_model() }} ({{ car_vin }})</p>
+                </div>
+
+                <!-- GPS Debug Info -->
+                <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 12px; border-left: 4px solid #ffc107;">
+                    <p style="margin-bottom: 6px; color: #856404; font-size: 0.9rem;">
+                        <i class="bi bi-satellite" style="color: #ffc107;"></i> <strong>GPS Status:</strong>
+                    </p>
+                    <p style="margin: 0; font-size: 0.85rem; color: #856404;">
+                        VIN: <span id="debug-vin">{{ car_vin }}</span><br>
+                        Last Update: <span id="debug-last-update">Waiting...</span><br>
+                        Position: <span id="debug-position">---</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div id="map"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- FALLBACK COORDINATES ---
+    const DEFAULT_DEPOT = { lat: 31.5204, lng: 74.3587 };
+    const DEFAULT_CLIENT = { lat: 31.5497, lng: 74.3436 };
+
+    // Variables from Flask
+    let CAR_VIN = "{{ car_vin }}";
+    
+    // Parse depot coordinates safely
+    let depotLat = parseFloat("{{ depot.lat }}");
+    let depotLng = parseFloat("{{ depot.lng }}");
+    if (isNaN(depotLat) || isNaN(depotLng)) {
+        depotLat = DEFAULT_DEPOT.lat;
+        depotLng = DEFAULT_DEPOT.lng;
+    }
+    const DEPOT_COORDS = { lat: depotLat, lng: depotLng };
+
+    // Try to get saved pickup location (use correct key: pickup_location_location)
+    let _savedPickup = null;
+    try {
+        _savedPickup = JSON.parse(localStorage.getItem('pickup_location_location') || 'null');
+    } catch (e) {
+        _savedPickup = null;
+    }
+
+    // Parse client coordinates safely
+    let clientLat = parseFloat("{{ client.lat }}");
+    let clientLng = parseFloat("{{ client.lng }}");
+    // If we have a saved pickup with valid coordinates, override the server value
+    if (_savedPickup && typeof _savedPickup.lat === 'number' && typeof _savedPickup.lng === 'number') {
+        clientLat = _savedPickup.lat;
+        clientLng = _savedPickup.lng;
+    }
+    // If still NaN, fall back to default
+    if (isNaN(clientLat) || isNaN(clientLng)) {
+        clientLat = DEFAULT_CLIENT.lat;
+        clientLng = DEFAULT_CLIENT.lng;
+    }
+    const SERVER_CLIENT_COORDS = { lat: clientLat, lng: clientLng };
+    const SERVER_CLIENT_NAME = (_savedPickup && _savedPickup.name) ? _savedPickup.name : "{{ client.name }}";
+
+    // Helper: haversine distance
+    function haversineKm(lat1, lon1, lat2, lon2) {
+        const toRad = x => x * Math.PI / 180;
+        const R = 6371;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+</script>
+
+<!-- Leaflet JS with integrity -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<!-- Leaflet fullscreen plugin -->
+<script src="https://unpkg.com/leaflet.fullscreen/Control.FullScreen.js"></script>
+
+<script>
+    // Use the pre-parsed coordinates
+    const DEPOT = [DEPOT_COORDS.lat, DEPOT_COORDS.lng];
+    const SERVER_CLIENT = [SERVER_CLIENT_COORDS.lat, SERVER_CLIENT_COORDS.lng];
+
+    let routePolyline = null;
+    let accentPolyline = null;
+    let routeWaypoints = [];
+
+    // Initialize map only after DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ensure the map container exists
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer) return;
+
+        // Enhanced map with standard OpenStreetMap tiles (vibrant colors)
+        const map = L.map('map', { 
+            zoomControl: true,
+            fullscreenControl: true,
+            maxZoom: 19
+        }).setView(DEPOT, 12);
+
+        // Use standard OpenStreetMap tiles for vibrant colors and details
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Add scale control
+        L.control.scale({ imperial: false, metric: true }).addTo(map);
+
+        // Depot marker
+        const depotHtml = `
+            <div class="depot-pin">
+                <svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 0C8 0 4 4 4 9c0 7.2 10 19 10 19s10-11.8 10-19c0-5-4-9-10-9z" fill="#1fa65a"/>
+                    <circle cx="14" cy="9" r="3.5" fill="#fff"/>
+                </svg>
+            </div>`;
+        const depotIcon = L.divIcon({
+            className: 'depot-pin',
+            html: depotHtml,
+            iconSize: [28, 36],
+            iconAnchor: [14, 36],
+            popupAnchor: [0, -30]
+        });
+        const depotMarker = L.marker(DEPOT, { icon: depotIcon }).addTo(map);
+        depotMarker.bindTooltip('Auto-Hire depot', { permanent: false, direction: 'top' });
+
+        // Customer marker
+        const customerMarker = L.marker(SERVER_CLIENT, { 
+            title: 'Customer Pickup Location',
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        }).addTo(map).bindPopup('<strong>Customer Pickup Location</strong>');
+        const destNameEl = document.getElementById('destination-name');
+        if (destNameEl) destNameEl.innerText = SERVER_CLIENT_NAME;
+        customerMarker.bindPopup(`<strong>${SERVER_CLIENT_NAME}</strong>`);
+
+        // Live car marker (red glowing dot)
+        const liveHtml = `<div class="live-point-icon"><div class="live-ring"><div class="live-dot"></div></div></div>`;
+        const liveIcon = L.divIcon({ className: 'live-point-icon', html: liveHtml, iconSize: [26, 26], iconAnchor: [13, 13] });
+        const carMarker = L.marker(DEPOT, { icon: liveIcon }).addTo(map);
+
+        // Remove any stray markers
+        map.eachLayer(function(layer) {
+            try {
+                if (layer instanceof L.Marker && layer !== depotMarker && layer !== customerMarker && layer !== carMarker) {
+                    map.removeLayer(layer);
+                }
+            } catch (e) {}
+        });
+
+        // Initial info
+        (function setInitialInfo() {
+            try {
+                const lat = DEPOT[0], lon = DEPOT[1];
+                const distanceKm = haversineKm(lat, lon, SERVER_CLIENT[0], SERVER_CLIENT[1]);
+                document.getElementById('distance-left').innerText = isFinite(distanceKm) ? distanceKm.toFixed(2) + ' km' : '---';
+                if (isFinite(distanceKm)) {
+                    if (distanceKm < 0.2) {
+                        document.getElementById('time-left').innerHTML = '<span style="color: #28a745; font-size: 1.2rem;"><i class="bi bi-check-circle-fill"></i> Arrived!</span>';
+                        document.getElementById('car-status').innerText = 'Arrived';
+                        document.getElementById('car-status').className = 'badge-status badge bg-success';
+                    } else {
+                        const mins = Math.ceil(distanceKm / (40 / 60));
+                        document.getElementById('time-left').innerText = mins + ' min';
+                        document.getElementById('car-status').innerText = 'Enroute';
+                        document.getElementById('car-status').className = 'badge-status badge bg-info';
+                    }
+                } else {
+                    document.getElementById('time-left').innerText = 'Calculating...';
+                }
+            } catch (e) {}
+        })();
+
+        // Route fetching
+       function fetchShortestRoute() {
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${DEPOT[1]},${DEPOT[0]};${SERVER_CLIENT[1]},${SERVER_CLIENT[0]}?geometries=geojson&steps=true&overview=full`;
+
+    // ---------- ADD THIS TIMEOUT BLOCK ----------
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    fetch(osrmUrl, { signal: controller.signal })
+        .then(res => {
+            clearTimeout(timeoutId);
+            return res.json();
+        })
+        // -----------------------------------------
+        .then(data => {
+            // (the existing successful route code stays exactly the same)
+            if (data.routes && data.routes.length > 0) {
+                const route = data.routes[0];
+                const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                routeWaypoints = coords;
+                if (routePolyline) map.removeLayer(routePolyline);
+                if (accentPolyline) map.removeLayer(accentPolyline);
+                routePolyline = L.polyline(coords, {
+                    color: '#1fa65a',
+                    weight: 5,
+                    opacity: 0.8,
+                    lineCap: 'round',
+                    lineJoin: 'round',
+                    className: 'shortest-route'
+                }).addTo(map);
+                accentPolyline = L.polyline(coords, {
+                    color: '#6ee1a0',
+                    weight: 2,
+                    opacity: 0.45,
+                    dashArray: '5, 3',
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                }).addTo(map);
+                const distanceKm = (route.distance / 1000).toFixed(2);
+                const durationMins = Math.ceil(route.duration / 60);
+                document.getElementById('route-distance').innerText = `${distanceKm} km (${durationMins} min)`;
+                const bounds = L.latLngBounds(coords);
+                map.fitBounds(bounds.pad(0.15));
+            } else {
+                drawStraightRoute();
+            }
+        })
+        .catch(err => {
+            console.warn('OSRM failed, using fallback:', err);
+            drawStraightRoute();
+        });
+}
+       function drawStraightRoute() {
+    if (routePolyline) map.removeLayer(routePolyline);
+    routePolyline = L.polyline([DEPOT, SERVER_CLIENT], {
+        color: '#1fa65a',
+        weight: 5,
+        opacity: 0.8,
+        dashArray: '5, 5',
+        lineCap: 'round',
+        lineJoin: 'round'
+    }).addTo(map);
+    routeWaypoints = [DEPOT, SERVER_CLIENT];
+    const bounds = L.latLngBounds([DEPOT, SERVER_CLIENT]);
+    map.fitBounds(bounds.pad(0.2));
+
+    // ✅ FIX: update route-distance with straight-line distance & estimated time
+    const dist = haversineKm(DEPOT[0], DEPOT[1], SERVER_CLIENT[0], SERVER_CLIENT[1]);
+    if (dist && isFinite(dist)) {
+        const estimatedMins = Math.ceil(dist / (40 / 60)); // 40 km/h average speed
+        document.getElementById('route-distance').innerText = 
+            `${dist.toFixed(2)} km (${estimatedMins} min) – straight line`;
+    } else {
+        document.getElementById('route-distance').innerText = 'Unavailable';
+    }
+}
+
+        // Poll location updates - SMOOTH MOVEMENT IMPLEMENTATION
+        let lastKnownPosition = null;
+        let targetPosition = null;
+        let updateCount = 0;
+        let animationFrameId = null;
+
+        // Smooth interpolation function
+        function interpolatePosition(start, end, progress) {
+            return [
+                start[0] + (end[0] - start[0]) * progress,
+                start[1] + (end[1] - start[1]) * progress
+            ];
+        }
+
+        // Animate marker to new position
+        function animateMarkerTo(targetPos, duration = 800) {
+            const startPos = carMarker.getLatLng();
+            const startTime = performance.now();
+            
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+
+            function step(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function for smooth deceleration
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                const newPos = interpolatePosition([startPos.lat, startPos.lng], targetPos, easeProgress);
+                carMarker.setLatLng(newPos);
+                
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(step);
+                }
+            }
+            
+            animationFrameId = requestAnimationFrame(step);
+        }
+
+        // Poll every 1 second (faster updates for smoother experience)
+        setInterval(() => {
+            fetch(`/get_location/${encodeURIComponent(CAR_VIN)}`)
+                .then(res => {
+                    if (!res.ok) {
+                        if (res.status === 404) {
+                            console.warn(`[Tracking] No GPS data found for VIN: ${CAR_VIN}`);
+                            console.warn(`[Tracking] Make sure GPSLogger is sending data to this VIN`);
+                        }
+                        throw new Error(`HTTP ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    updateCount++;
+                    const lat = parseFloat(data.lat);
+                    const lon = parseFloat(data.lon ?? data.lng ?? data.longitude);
+                    console.log(`[Tracking] Update #${updateCount}: lat=${lat}, lon=${lon}`);
+
+                    // Update debug panel
+                    document.getElementById('debug-last-update').innerText = new Date().toLocaleTimeString();
+                    document.getElementById('debug-position').innerText = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        const currentPos = [lat, lon];
+
+                        // Check if position actually changed
+                        const hasMoved = !lastKnownPosition || 
+                            Math.abs(lat - lastKnownPosition[0]) > 0.000001 || 
+                            Math.abs(lon - lastKnownPosition[1]) > 0.000001;
+
+                        if (hasMoved) {
+                            console.log(`[Tracking] Position changed! Moving marker to:`, currentPos);
+                            
+                            // Use smooth animation instead of instant jump
+                            animateMarkerTo(currentPos, 800);
+                            
+                            lastKnownPosition = currentPos;
+                        }
+
+                        const distanceKm = haversineKm(lat, lon, SERVER_CLIENT[0], SERVER_CLIENT[1]);
+                        if (distanceKm < 0.2) {
+                            document.getElementById('time-left').innerHTML = '<span style="color: #28a745; font-size: 1.2rem;"><i class="bi bi-check-circle-fill"></i> Arrived!</span>';
+                            document.getElementById('car-status').innerText = 'Arrived';
+                            document.getElementById('car-status').className = 'badge-status badge bg-success';
+                        } else {
+                            const mins = Math.ceil(distanceKm / (40 / 60));
+                            document.getElementById('time-left').innerText = mins + ' min';
+                            document.getElementById('car-status').innerText = 'Enroute';
+                            document.getElementById('car-status').className = 'badge-status badge bg-info';
+                        }
+                        document.getElementById('distance-left').innerText = distanceKm.toFixed(2) + ' km';
+
+                        // Auto-pan map to keep marker in view (smooth pan)
+                        if (!map.getBounds().contains(currentPos)) {
+                            map.panTo(currentPos, { animate: true, duration: 0.8 });
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.warn('[Tracking] Location fetch error:', err);
+                });
+        }, 1000);
+
+        fetchShortestRoute();
+    });
+</script>
+{% include 'components/chat_widget.html' %}
+</body>
+</html>

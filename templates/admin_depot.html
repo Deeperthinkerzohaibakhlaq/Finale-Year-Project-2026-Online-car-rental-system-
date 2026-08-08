@@ -1,0 +1,113 @@
+{% extends "admin_layout.html" %}
+{% block title %}Admin – Depot Configuration{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .header-green { background: linear-gradient(90deg,#0c0c0c,#0d0e0d); color:#fff; padding:18px; border-radius:8px; display:flex; align-items:center; justify-content:space-between; }
+    .depot-box { background:#fff; padding:12px; border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,0.06); }
+    #depotMap { height: 360px; border-radius:8px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="header-green mb-3">
+      <h3 class="m-0">AutoHire Admin</h3>
+      <div style="min-width:360px;">
+        <div class="depot-box">
+          <label class="form-label mb-1"><strong>Depot city / coordinates</strong></label>
+          <div class="input-group mb-2">
+            <input id="depotCity" class="form-control" placeholder="Enter city (e.g. Lahore, Pakistan)" />
+            <button id="geocodeBtn" class="btn btn-light" style="background-color: #0d0e0d; color: white;">Find</button>
+          </div>
+          <div class="input-group mb-2">
+            <input id="depotLat" class="form-control" placeholder="Latitude" />
+            <input id="depotLng" class="form-control" placeholder="Longitude" />
+          </div>
+          <div class="d-flex gap-2">
+            <button id="saveDepotBtn" class="btn btn-success" style="background-color: #0d0e0d;">Change Depot Location</button>
+            <span id="saveResult" class="text-success align-self-center"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-8">
+        <div id="depotMap"></div>
+      </div>
+      <div class="col-md-4">
+        <h5>Current Depot</h5>
+        <p id="currentDepot">Loading...</p>
+        <small class="text-muted">Click on the map to choose depot coordinates. Use the city field to geocode.</small>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const depot = {{ depot|default(None)|tojson }} || {lat:31.5204,lng:74.3587,name:'AutoHire Depot (Lahore)'};
+    const map = L.map('depotMap').setView([depot.lat, depot.lng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    let marker = L.marker([depot.lat, depot.lng], {draggable:true}).addTo(map);
+    function reverseGeocode(lat,lng){
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+      return fetch(url, {headers: {'Accept':'application/json'}})
+        .then(r=>r.json()).catch(()=>null);
+    }
+
+    async function updateUIFromMarker() {
+      const p = marker.getLatLng();
+      document.getElementById('depotLat').value = p.lat.toFixed(6);
+      document.getElementById('depotLng').value = p.lng.toFixed(6);
+      try {
+        const res = await reverseGeocode(p.lat, p.lng);
+        if (res && res.display_name) {
+          document.getElementById('depotCity').value = res.display_name;
+          document.getElementById('currentDepot').innerText = res.display_name + ' — ' + p.lat.toFixed(6) + ', ' + p.lng.toFixed(6);
+          return;
+        }
+      } catch (e) { /* ignore */ }
+      document.getElementById('currentDepot').innerText = depot.name + ' — ' + p.lat.toFixed(6) + ', ' + p.lng.toFixed(6);
+    }
+    marker.on('dragend', updateUIFromMarker);
+    map.on('click', function(e){ marker.setLatLng(e.latlng); updateUIFromMarker(); });
+    updateUIFromMarker();
+
+    document.getElementById('geocodeBtn').addEventListener('click', function(){
+      const q = document.getElementById('depotCity').value.trim();
+      if (!q) return;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pk&q=${encodeURIComponent(q)}`;
+      fetch(url, {headers: {'Accept':'application/json'}})
+        .then(r=>r.json()).then(data=>{
+          if (data && data[0]){
+            const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+            marker.setLatLng([lat,lng]); map.setView([lat,lng], 12);
+            document.getElementById('depotLat').value = lat.toFixed(6);
+            document.getElementById('depotLng').value = lng.toFixed(6);
+            document.getElementById('currentDepot').innerText = data[0].display_name + ' — ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+            document.getElementById('depotCity').value = data[0].display_name;
+          } else {
+            alert('City not found. Try full name, e.g. "Lahore, Pakistan"');
+          }
+        }).catch(err=>{ alert('Geocode failed: '+err); });
+    });
+
+    document.getElementById('saveDepotBtn').addEventListener('click', function(){
+      const lat = parseFloat(document.getElementById('depotLat').value);
+      const lng = parseFloat(document.getElementById('depotLng').value);
+      const name = document.getElementById('depotCity').value || `Depot ${lat},${lng}`;
+      if (isNaN(lat) || isNaN(lng)) { alert('Please provide valid coordinates'); return; }
+      fetch('/admin/depot', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({lat:lat, lng:lng, name: name})
+      }).then(r=>r.json()).then(j=>{
+        if (j.success) {
+          document.getElementById('saveResult').innerText = 'Saved';
+          setTimeout(()=>document.getElementById('saveResult').innerText=' ',1500);
+        } else alert('Save failed: '+(j.message||'unknown'));
+      }).catch(e=>{ alert('Save error: '+e); });
+    });
+</script>
+{% endblock %}
