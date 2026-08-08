@@ -1,0 +1,8 @@
+bcrypt==3.2.2
+beautifulsoup4==4.12.3
+Flask==3.0.2
+Jinja2==3.1.2
+jsonpointer==2.0
+jsonschema==4.10.3
+pdfkit==1.0.0
+Werkzeug==3.0.1

@@ -1,0 +1,5 @@
+
+Pillow>=9.0.0
+numpy>=1.22
+# Optional: install scipy if you want the --fuzz dilation feature
+# scipy>=1.7
